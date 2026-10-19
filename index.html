@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Abhijith Saji is a founder, app developer and startup builder from Kerala, India, working across mobile apps, web development, UI/UX and AI-powered products.">
+<meta name="description" content="Abhijith Saji — founder, app developer and startup builder. Explore projects, skills and ways to connect.">
 <meta name="theme-color" content="#050b1a">
 <meta property="og:title" content="Abhijith Saji — Founder & CEO">
 <meta property="og:description" content="App developer, startup builder and entrepreneur from Kerala, India.">
@@ -44,8 +44,9 @@ h2:after{content:"";display:block;width:48px;height:3px;margin-top:8px;backgroun
 .sk span{padding:8px 16px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:14px;transition:.25s}
 .sk span:hover{border-color:var(--gold);color:var(--gold);transform:scale(1.07)}
 .grp{margin-top:26px}.grp h3{margin:0;color:var(--em);font-size:15px;letter-spacing:1px;text-transform:uppercase}
-.rv{opacity:0;transform:translateY(26px);transition:.8s}
-.rv.in{opacity:1;transform:none}
+.rv{opacity:1;transform:none;transition:opacity .8s,transform .8s}
+.js-ready .rv{opacity:0;transform:translateY(26px)}
+.js-ready .rv.in{opacity:1;transform:none}
 .tl{margin:26px 0 0 8px;border-left:2px solid var(--line);padding-left:26px}
 .tl div{position:relative;margin-bottom:28px}
 .tl div:before{content:"";position:absolute;left:-34px;top:6px;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--em),var(--gold));box-shadow:0 0 14px rgba(34,211,238,0.6)}
@@ -115,7 +116,58 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--em);outline-offset:
 .contact-details p{color:var(--mut);font-size:14px}
 .hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
 @media(max-width:650px){.contact-layout{grid-template-columns:1fr}.contact-form button{align-self:stretch}.contact-details{padding:20px}}
-\n</style>
+
+
+/* Layout/accessibility refinements */
+:root{scroll-padding-top:76px}
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+img{max-width:100%}
+nav .w{gap:16px}
+nav .w>div{display:flex;align-items:center;gap:clamp(8px,1.5vw,18px);flex-wrap:wrap;justify-content:flex-end}
+nav a{margin-left:0;white-space:nowrap}
+.hero{width:100%;max-width:1000px}
+section{scroll-margin-top:76px}
+section p, .card p{overflow-wrap:anywhere}
+.btn{cursor:pointer;line-height:1.35;text-align:center}
+.btn:focus-visible,nav a:focus-visible,.tabs a:focus-visible,.brand:focus-visible{outline:3px solid var(--em);outline-offset:4px}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.contact-layout{min-width:0}
+.contact-form input,.contact-form textarea{min-width:0}
+#splash{padding:24px;text-align:center}
+#splash .nm{letter-spacing:clamp(2px,1vw,6px)}
+@media(max-width:760px){
+  nav .w{height:auto;min-height:56px;padding-top:10px;padding-bottom:10px;align-items:flex-start}
+  nav .w>div{gap:8px 12px}
+  nav a{font-size:13px}
+  .hero{padding-top:48px}
+  .w{padding-left:18px;padding-right:18px}
+}
+@media(max-width:600px){
+  nav .w>div{display:none}
+  .hero{padding:34px 0 28px}
+  section{padding:36px 0}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .card{min-width:0}
+  .tabs{padding-left:max(4px,env(safe-area-inset-left));padding-right:max(4px,env(safe-area-inset-right))}
+  .tabs a{min-width:0}
+  .tabs a b{font-size:18px}
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  .contact-layout{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:360px){
+  .w{padding-left:14px;padding-right:14px}
+  .tabs a{font-size:10px}
+  .tabs a b{font-size:16px}
+  .sk span{padding:6px 10px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .rv{opacity:1!important;transform:none!important}
+}
+
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -253,6 +305,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--em);outline-offset:
 <nav class="tabs" aria-label="Quick navigation"><a href="#about"><b aria-hidden="true">⌂</b>About</a><a href="#projects"><b aria-hidden="true">▣</b>Projects</a><a href="#skills"><b aria-hidden="true">✦</b>Skills</a><a href="#journey"><b aria-hidden="true">◔</b>Journey</a><a href="#contact"><b aria-hidden="true">✉</b>Contact</a></nav>
 </main>
 <script>
+document.documentElement.classList.add("js-ready");
 (() => {
   const items = document.querySelectorAll(".rv");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -330,7 +383,8 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--em);outline-offset:
       }
     });
   }
-\n  const splash = document.getElementById("splash");
+
+  const splash = document.getElementById("splash");
   if (splash && reduceMotion) splash.classList.add("skip-animation");
   window.setTimeout(() => {
     if (splash) splash.classList.add("is-hidden");
