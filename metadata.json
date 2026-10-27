@@ -1,0 +1,6 @@
+{
+  "name": "Remix Ente Hospital - Doctor Booking & Healthcare Portal",
+  "description": "A Supabase-backed appointment portal for patients, doctors, and hospital administrators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
