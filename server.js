@@ -85,10 +85,10 @@ app.post('/api/contact', async (req, res) => {
 
 app.use('/api', (_req, res) => res.status(404).json({ ok: false, message: 'API route not found.' }));
 app.get('*', (_req, res) => res.sendFile(FRONTEND_FILE));
+
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => console.log(`AIWave website and API running at http://localhost:${PORT}`));
 }
 
-module.exports = (req, res) => {
-  return app(req, res);
-};
+// Correct export format for Vercel serverless functions
+module.exports = app;
