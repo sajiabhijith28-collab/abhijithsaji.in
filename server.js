@@ -11,6 +11,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const DATA_DIR = path.join(__dirname, 'data');
 const LEADS_FILE = path.join(DATA_DIR, 'enquiries.json');
+const FRONTEND_FILE = path.join(__dirname, 'AIWave_Digital_Solutions_colourful__1_.html');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(LEADS_FILE)) fs.writeFileSync(LEADS_FILE, '[]', 'utf8');
 
@@ -19,7 +20,6 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : true }));
 app.use(express.json({ limit: '20kb' }));
 app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 function clean(value, max) {
   return typeof value === 'string' ? value.trim().replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, max) : '';
@@ -84,6 +84,6 @@ app.post('/api/contact', async (req, res) => {
 });
 
 app.use('/api', (_req, res) => res.status(404).json({ ok: false, message: 'API route not found.' }));
-app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('*', (_req, res) => res.sendFile(FRONTEND_FILE));
 
 app.listen(PORT, () => console.log(`AIWave website and API running at http://localhost:${PORT}`));
