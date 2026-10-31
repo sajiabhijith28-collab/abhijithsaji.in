@@ -43,6 +43,8 @@ import type {
 import {
   buildInitialSeedDatabase,
   CURRENT_STORE_VERSION,
+  DEFAULT_ADMIN_PASSWORD_HASH,
+  DEFAULT_ADMIN_PHONE,
   type LocalDatabaseSchema,
 } from "./seed-data";
 
@@ -75,6 +77,25 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
     s.upi_verification_mode = "admin_approval";
     patched = true;
   }
+
+  // Upgrade legacy bootstrap admin (+919000000001) to owner's admin credentials in-place
+  const adminProfile = db.profiles.find(
+    (p) => p.id === "usr-admin-1" && p.role === "admin"
+  );
+  if (adminProfile && adminProfile.phone === "+919000000001") {
+    adminProfile.phone = normalizeIndianPhone(
+      process.env.ADMIN_BOOTSTRAP_PHONE || DEFAULT_ADMIN_PHONE
+    );
+    adminProfile.full_name = "Abhijith Saji";
+    adminProfile.email =
+      process.env.ADMIN_BOOTSTRAP_EMAIL || "sajiabhijith28@gmail.com";
+    adminProfile.password_hash = process.env.ADMIN_BOOTSTRAP_PASSWORD
+      ? hashPassword(process.env.ADMIN_BOOTSTRAP_PASSWORD)
+      : DEFAULT_ADMIN_PASSWORD_HASH;
+    adminProfile.updated_at = new Date().toISOString();
+    patched = true;
+  }
+
   return patched;
 }
 

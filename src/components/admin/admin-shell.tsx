@@ -126,7 +126,7 @@ export function AdminShell({
                       id="adm-phone"
                       type="tel"
                       maxLength={10}
-                      placeholder="90000 00001"
+                      placeholder="10-digit mobile number"
                       className="rounded-l-none"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
