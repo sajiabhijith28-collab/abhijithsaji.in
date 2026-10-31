@@ -1,0 +1,43 @@
+{
+  "name": "my-dr",
+  "version": "1.0.0",
+  "private": true,
+  "description": "My Dr - Hospital & Doctor Appointment Booking Platform",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "2.118.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "2.1.1",
+    "framer-motion": "^12.4.7",
+    "lucide-react": "0.546.0",
+    "next": "16.4.3",
+    "next-themes": "^0.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "sonner": "^2.0.1",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.32",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.9.3"
+  }
+}

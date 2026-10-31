@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm Pearl Ivory & Royal Midnight Navy + Champagne Gold Palette */
+    --background: 42 30% 98%;
+    --foreground: 214 68% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 68% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 68% 12%;
+    /* Royal Midnight Navy (#0B1F3A) matching the md+ emblem background */
+    --primary: 214 68% 15%;
+    --primary-foreground: 42 55% 96%;
+    /* Soft Champagne Gold surface & rich burnished gold text */
+    --secondary: 41 52% 93%;
+    --secondary-foreground: 38 66% 27%;
+    --muted: 214 24% 94.5%;
+    --muted-foreground: 214 22% 40%;
+    --accent: 41 50% 92%;
+    --accent-foreground: 214 68% 14%;
+    --gold: 41 54% 55%;
+    --destructive: 0 78% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 22% 87%;
+    --input: 214 24% 85%;
+    --ring: 41 54% 52%;
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    /* Regal Midnight Navy Dark Mode + Luminous Champagne Gold (#D4AF5A) */
+    --background: 214 70% 9%;
+    --foreground: 42 38% 96%;
+    --card: 214 66% 13.5%;
+    --card-foreground: 42 38% 96%;
+    --popover: 214 66% 13.5%;
+    --popover-foreground: 42 38% 96%;
+    /* Luminous Metallic Champagne Gold */
+    --primary: 41 56% 58%;
+    --primary-foreground: 214 72% 10%;
+    --muted: 214 50% 17.5%;
+    --muted-foreground: 214 22% 70%;
+    --secondary: 214 50% 19%;
+    --secondary-foreground: 41 58% 76%;
+    --accent: 214 50% 18.5%;
+    --accent-foreground: 41 60% 75%;
+    --gold: 41 58% 60%;
+    --destructive: 0 70% 52%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 42% 22%;
+    --input: 214 42% 23%;
+    --ring: 41 56% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-[#c9a353]/25 selection:text-foreground;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+.medical-grid-bg {
+  background-image: radial-gradient(
+    rgba(201, 163, 83, 0.18) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+.royal-navy-hero {
+  background:
+    radial-gradient(circle at 82% 22%, rgba(201, 163, 83, 0.22), transparent 45%),
+    radial-gradient(circle at 12% 80%, rgba(201, 163, 83, 0.12), transparent 40%),
+    linear-gradient(135deg, #08172c 0%, #0b1f3a 55%, #102a4c 100%);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0b1f3a !important;
+  }
+}
