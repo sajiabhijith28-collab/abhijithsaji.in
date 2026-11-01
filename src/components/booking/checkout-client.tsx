@@ -17,6 +17,7 @@ import {
   Loader2,
   Lock,
   Printer,
+  QrCode,
   RefreshCw,
   ShieldCheck,
   Smartphone,
@@ -798,6 +799,41 @@ export function CheckoutClient({
                         <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                       </a>
                     ))}
+                </div>
+
+                {/* Desktop QR Code Accordion / Fallback */}
+                <div className="rounded-xl border bg-muted/20 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold inline-flex items-center gap-1.5 text-foreground">
+                      <QrCode className="h-4 w-4 text-primary" />
+                      Paying from Desktop or Another Phone?
+                    </span>
+                    <Badge variant="outline" className="text-[10px]">Scan &amp; Pay</Badge>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-slate-900 rounded-lg p-3 border">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                        primaryUpiHref
+                      )}`}
+                      alt="UPI QR Code"
+                      className="h-28 w-28 rounded-md border shadow-xs shrink-0"
+                    />
+                    <div className="text-xs space-y-1.5 text-center sm:text-left">
+                      <p className="font-medium text-foreground">
+                        Scan with any UPI App: GPay, PhonePe, Paytm, or BHIM
+                      </p>
+                      <p className="text-muted-foreground text-[11px]">
+                        Exact amount <strong>{formatINR(appointment.platform_fee, true)}</strong> and reference are automatically filled.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={copyUpiId}
+                        className="text-primary font-mono text-[11px] font-bold hover:underline inline-flex items-center gap-1"
+                      >
+                        <Copy className="h-3 w-3" /> Copy VPA: {receivingUpiId}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="rounded-xl border bg-muted/40 px-3.5 py-2.5 flex items-center justify-between text-xs">
