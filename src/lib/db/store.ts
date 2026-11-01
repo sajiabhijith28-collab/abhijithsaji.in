@@ -754,6 +754,7 @@ export function updatePatientProfile(
     emergency_contact?: string;
     city: string;
     area?: string;
+    avatar_url?: string;
   }
 ): ProfileRecord {
   const db = loadDb();
@@ -768,6 +769,9 @@ export function updatePatientProfile(
   profile.emergency_contact = updates.emergency_contact || undefined;
   profile.city = updates.city;
   profile.area = updates.area || undefined;
+  if (updates.avatar_url !== undefined) {
+    profile.avatar_url = updates.avatar_url || undefined;
+  }
   profile.updated_at = new Date().toISOString();
   persistDb(db);
   return profile;
@@ -1618,6 +1622,9 @@ export function adminUpsertDoctor(input: {
     profile.full_name = input.full_name;
     profile.phone = normalizedPhone;
     profile.email = input.email || undefined;
+    if (input.photo_url !== undefined) {
+      profile.avatar_url = input.photo_url || undefined;
+    }
     profile.is_active = input.is_active;
     profile.updated_at = nowIso;
 
@@ -1629,7 +1636,7 @@ export function adminUpsertDoctor(input: {
     doc.experience_years = input.experience_years;
     doc.languages = input.languages;
     doc.bio = resolvedBio;
-    if (input.photo_url) doc.photo_url = input.photo_url;
+    if (input.photo_url !== undefined) doc.photo_url = input.photo_url || doc.photo_url;
     doc.consultation_fee = input.consultation_fee;
     doc.slot_duration_mins = input.slot_duration_mins;
     doc.platform_fee_override_type = input.platform_fee_override_type || null;
@@ -1666,6 +1673,7 @@ export function adminUpsertDoctor(input: {
     email: input.email || undefined,
     city: loc?.city || "Ponkunnam",
     area: loc?.area,
+    avatar_url: input.photo_url || undefined,
     password_hash: hashPassword(tempPassword),
     has_password: true,
     must_change_password: true, // Forced password change on first login
@@ -1731,6 +1739,22 @@ export function adminUpsertDoctor(input: {
       tempPassword,
     },
   };
+}
+
+export function updateDoctorPhoto(doctorId: string, photoUrl: string): DoctorWithDetails {
+  const db = loadDb();
+  const doc = db.doctors.find((d) => d.id === doctorId);
+  if (!doc) throw new Error("Doctor not found");
+  const nowIso = new Date().toISOString();
+  doc.photo_url = photoUrl;
+  doc.updated_at = nowIso;
+  const profile = db.profiles.find((p) => p.id === doc.profile_id);
+  if (profile) {
+    profile.avatar_url = photoUrl;
+    profile.updated_at = nowIso;
+  }
+  persistDb(db);
+  return enrichDoctor(db, doc)!;
 }
 
 export function adminResetDoctorCredentials(doctorId: string): {

@@ -8,6 +8,7 @@ import {
   Bell,
   Building2,
   CalendarCheck2,
+  Camera,
   CheckCircle2,
   Clock,
   Droplets,
@@ -36,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OtpInput } from "@/components/ui/otp-input";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   AppointmentWithDetails,
@@ -78,6 +80,7 @@ export function AccountClient({
   );
   const [city, setCity] = useState(user.city || cities[0] || "Ponkunnam");
   const [area, setArea] = useState(user.area || "");
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || "");
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Password fields
@@ -145,6 +148,7 @@ export function AccountClient({
           emergency_contact: emergencyContact,
           city,
           area,
+          avatar_url: avatarUrl,
         }),
       });
       const data = await res.json();
@@ -258,8 +262,25 @@ export function AccountClient({
       <div className="royal-navy-hero rounded-3xl border border-[#c9a353]/45 p-5 sm:p-7 text-white shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="flex items-start sm:items-center gap-4">
-            <div className="flex h-16 w-16 sm:h-18 sm:w-18 shrink-0 items-center justify-center rounded-2xl border-2 border-[#c9a353]/65 bg-gradient-to-br from-[#c9a353]/25 to-[#0b1f3a] font-heading text-xl sm:text-2xl font-extrabold text-[#ebd396] shadow-inner">
-              {getInitials(user.full_name)}
+            <div className="relative group flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl border-2 border-[#c9a353]/65 bg-gradient-to-br from-[#c9a353]/25 to-[#0b1f3a] font-heading text-xl sm:text-2xl font-extrabold text-[#ebd396] shadow-inner overflow-hidden">
+              {avatarUrl || user.avatar_url ? (
+                <img
+                  src={avatarUrl || user.avatar_url}
+                  alt={user.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                getInitials(user.full_name)
+              )}
+              <button
+                type="button"
+                onClick={() => setActiveTab("profile")}
+                title="Change Profile Photo"
+                className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[10px] font-semibold"
+              >
+                <Camera className="h-4 w-4 mb-0.5" />
+                Change
+              </button>
             </div>
 
             <div className="space-y-1.5">
@@ -532,7 +553,16 @@ export function AccountClient({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveProfile} className="space-y-4">
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                <ImageUpload
+                  value={avatarUrl}
+                  onChange={setAvatarUrl}
+                  label="Profile Photo"
+                  description="Upload a photo from your device or select an avatar. Your photo will appear on your Personal Health ID card."
+                  fallbackInitials={getInitials(fullName || user.full_name)}
+                  category="patient"
+                />
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="acc-name">Full Name *</Label>

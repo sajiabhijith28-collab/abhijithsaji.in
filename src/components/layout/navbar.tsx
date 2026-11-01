@@ -214,8 +214,14 @@ export function Navbar({ user }: { user: PublicProfile | null }) {
                 className="bg-gradient-to-r from-[#c9a353] to-[#dfc074] text-[#08172c] font-semibold border border-[#ebd396]/60 hover:brightness-105"
                 asChild
               >
-                <Link href={portalHref}>
-                  {user.role === "admin" ? (
+                <Link href={portalHref} className="flex items-center gap-1.5">
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.full_name}
+                      className="h-4 w-4 rounded-full object-cover border border-[#c9a353]/50"
+                    />
+                  ) : user.role === "admin" ? (
                     <ShieldCheck className="h-3.5 w-3.5" />
                   ) : (
                     <User className="h-3.5 w-3.5" />

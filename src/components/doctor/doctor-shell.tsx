@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   CalendarCheck2,
+  Camera,
   Clock,
   ExternalLink,
   HeartPulse,
@@ -23,6 +24,15 @@ import { toast } from "sonner";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   Card,
   CardContent,
@@ -59,6 +69,34 @@ export function DoctorShell({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPw, setSavingPw] = useState(false);
+
+  const [editPhotoOpen, setEditPhotoOpen] = useState(false);
+  const [doctorPhoto, setDoctorPhoto] = useState(doctor.photo_url);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+
+  const handleSaveDoctorPhoto = async () => {
+    if (!doctorPhoto) {
+      toast.error("Please choose or upload a photo");
+      return;
+    }
+    setSavingPhoto(true);
+    try {
+      const res = await fetch("/api/doctor/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo_url: doctorPhoto }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update photo");
+      toast.success("Profile photo updated successfully!");
+      setEditPhotoOpen(false);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update photo");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -165,18 +203,33 @@ export function DoctorShell({
         {/* Doctor Badge */}
         <div className="p-4 border-b">
           <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
-            <img
-              src={doctor.photo_url}
-              alt={doctor.full_name}
-              className="h-11 w-11 rounded-xl object-cover border"
-            />
-            <div className="min-w-0">
+            <div className="relative group shrink-0">
+              <img
+                src={doctorPhoto || doctor.photo_url}
+                alt={doctor.full_name}
+                className="h-11 w-11 rounded-xl object-cover border"
+              />
+              <button
+                type="button"
+                onClick={() => setEditPhotoOpen(true)}
+                title="Change Doctor Photo"
+                className="absolute inset-0 bg-black/60 rounded-xl text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="min-w-0 flex-1">
               <p className="font-heading text-sm font-bold truncate">
                 {doctor.full_name}
               </p>
-              <p className="text-xs text-primary font-medium truncate">
-                {doctor.specialty.name}
-              </p>
+              <button
+                type="button"
+                onClick={() => setEditPhotoOpen(true)}
+                className="text-xs text-primary font-medium truncate hover:underline flex items-center gap-1"
+              >
+                <Camera className="h-3 w-3" />
+                Change Photo
+              </button>
             </div>
           </div>
         </div>
@@ -317,6 +370,51 @@ export function DoctorShell({
             })}
           </div>
         </nav>
+
+        {/* Change Doctor Profile Photo Dialog */}
+        <Dialog open={editPhotoOpen} onOpenChange={setEditPhotoOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5 text-primary" />
+                Update Profile Photo
+              </DialogTitle>
+              <DialogDescription>
+                This photo will be displayed on your public booking profile and patient appointment slips.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-2">
+              <ImageUpload
+                value={doctorPhoto}
+                onChange={setDoctorPhoto}
+                label="Doctor Portrait"
+                description="Upload an image from your device or pick a professional preset avatar."
+                fallbackInitials={doctor.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                category="doctor"
+              />
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditPhotoOpen(false)}
+                disabled={savingPhoto}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveDoctorPhoto}
+                disabled={savingPhoto || !doctorPhoto}
+              >
+                {savingPhoto && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+                Save Photo
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

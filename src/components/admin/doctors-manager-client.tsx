@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
 import type {
   DoctorWithDetails,
   HospitalRecord,
@@ -513,11 +514,13 @@ export function DoctorsManagerClient({
                 />
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Photo URL (Optional)</Label>
-                <Input
-                  placeholder="https://images.unsplash.com/..."
+                <ImageUpload
                   value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  onChange={setPhotoUrl}
+                  label="Doctor Profile Picture / Portrait Photo"
+                  description="Upload a photo from your device or select a preset avatar. Automatically compressed for fast loading."
+                  fallbackInitials={fullName ? fullName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() : "DR"}
+                  category="doctor"
                 />
               </div>
             </div>

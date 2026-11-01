@@ -60,6 +60,7 @@ export const updateProfileSchema = z.object({
   emergency_contact: z.string().trim().max(20).optional().or(z.literal("")),
   city: z.string().trim().min(2, "City is required"),
   area: z.string().trim().optional(),
+  avatar_url: z.string().trim().optional().or(z.literal("")),
 });
 
 export const changeMobileVerifySchema = z.object({
@@ -157,7 +158,7 @@ export const adminUpsertDoctorSchema = z.object({
   full_name: z.string().trim().min(2, "Doctor name is required"),
   phone: indianPhoneSchema,
   email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
-  photo_url: z.string().trim().url("Enter a valid image URL").optional().or(z.literal("")),
+  photo_url: z.string().trim().optional().or(z.literal("")),
   specialty_id: z.string().min(1, "Select a specialty"),
   hospital_id: z.string().optional(),
   new_hospital_name: z.string().trim().optional(),
