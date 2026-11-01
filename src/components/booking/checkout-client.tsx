@@ -584,7 +584,33 @@ export function CheckoutClient({
   }
 
   // =========================================================================
-  // STATE 3: PENDING PAYMENT CHECKOUT VIEW (Direct UPI Payment Links — No QR)
+  // STATE 3: CANCELLED OR EXPIRED BOOKING
+  // =========================================================================
+  if (appointment.status === "cancelled") {
+    return (
+      <div className="max-w-md mx-auto space-y-4">
+        <Card className="border-destructive/30 shadow-lg text-center p-6 space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <Clock className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="font-heading text-xl font-bold">Booking Window Expired</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {appointment.cancellation_reason || "The 10-minute temporary payment lock on this slot expired. Please choose an open slot to complete your appointment."}
+            </p>
+          </div>
+          <Button asChild className="w-full">
+            <Link href={`/book/${appointment.doctor_id}`}>
+              Pick a New Slot
+            </Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // STATE 4: PENDING PAYMENT CHECKOUT VIEW (Direct UPI Payment Links)
   // =========================================================================
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
