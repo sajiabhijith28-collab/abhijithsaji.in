@@ -258,10 +258,18 @@ export function AppointmentsClient({
               </span>
               <span>•</span>
               <span className="tabular-nums">
-                Paid Online: {formatINR(appt.platform_fee, true)} •{" "}
-                <span className="text-emerald-700 dark:text-emerald-400">
-                  At Clinic: {formatINR(appt.consultation_fee, true)}
-                </span>
+                {appt.payment?.payment_method === "clinic_reception" ? (
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                    Pay at Clinic: {formatINR(appt.consultation_fee, true)} (₹0 Online)
+                  </span>
+                ) : (
+                  <>
+                    Paid Online: {formatINR(appt.platform_fee, true)} •{" "}
+                    <span className="text-emerald-700 dark:text-emerald-400">
+                      At Clinic: {formatINR(appt.consultation_fee, true)}
+                    </span>
+                  </>
+                )}
               </span>
             </div>
           </div>
@@ -269,15 +277,45 @@ export function AppointmentsClient({
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           {appt.status === "pending_payment" && (
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground font-bold shadow-md hover:bg-primary/90 gap-1.5"
-              asChild
-            >
-              <Link href={`/checkout?bookingId=${appt.id}`}>
-                Pay ₹{appt.platform_fee} via UPI
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/bookings/${appt.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "pay_at_clinic" }),
+                    });
+                    const d = await res.json();
+                    if (!res.ok) throw new Error(d.error || "Failed");
+                    setAppointments((prev) =>
+                      prev.map((a) =>
+                        a.id === d.appointment.id ? d.appointment : a
+                      )
+                    );
+                    toast.success("Confirmed! Pay at clinic reception.");
+                    router.refresh();
+                  } catch (e) {
+                    toast.error(
+                      e instanceof Error ? e.message : "Failed to confirm"
+                    );
+                  }
+                }}
+              >
+                Pay at Clinic (Confirm Now)
+              </Button>
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground font-bold shadow-sm hover:bg-primary/90 gap-1.5"
+                asChild
+              >
+                <Link href={`/checkout?bookingId=${appt.id}`}>
+                  Pay ₹{appt.platform_fee} via UPI
+                </Link>
+              </Button>
+            </div>
           )}
           {appt.status === "verification_pending" && (
             <>
