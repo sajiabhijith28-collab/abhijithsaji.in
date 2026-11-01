@@ -38,7 +38,7 @@ export function Navbar({ user }: { user: PublicProfile | null }) {
   // Keeping a slim or hidden bar inside /admin and /doctor makes their sidebar layouts cleaner!
   const isPortalRoute =
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/doctor/") ||
+    pathname.startsWith("/doctor") ||
     pathname.startsWith("/mobile");
 
   if (isPortalRoute) {
@@ -60,8 +60,8 @@ export function Navbar({ user }: { user: PublicProfile | null }) {
     user?.role === "admin"
       ? "/admin"
       : user?.role === "doctor"
-      ? "/doctor/dashboard"
-      : "/account";
+        ? "/doctor/dashboard"
+        : "/account";
 
   return (
     <header className="no-print sticky top-0 z-40 w-full border-b border-[#c9a353]/30 bg-[#0b1f3a]/95 text-white shadow-md backdrop-blur-md">
@@ -230,8 +230,8 @@ export function Navbar({ user }: { user: PublicProfile | null }) {
                     {user.role === "admin"
                       ? "Admin Console"
                       : user.role === "doctor"
-                      ? "Doctor Portal"
-                      : user.full_name.split(" ")[0]}
+                        ? "Doctor Portal"
+                        : user.full_name.split(" ")[0]}
                   </span>
                 </Link>
               </Button>

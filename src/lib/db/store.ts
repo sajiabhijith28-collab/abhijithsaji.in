@@ -122,8 +122,8 @@ function loadDb(): LocalDatabaseSchema {
     return global.__MYDR_MEM_DB__;
   }
   try {
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, "utf8");
+    if (fs.existsSync(/*turbopackIgnore: true*/ DB_FILE)) {
+      const raw = fs.readFileSync(/*turbopackIgnore: true*/ DB_FILE, "utf8");
       const parsed = JSON.parse(raw) as LocalDatabaseSchema;
       if (parsed.store_version === CURRENT_STORE_VERSION) {
         const migrated = ensureSettingsDefaults(parsed);
@@ -144,10 +144,10 @@ function loadDb(): LocalDatabaseSchema {
 function persistDb(db: LocalDatabaseSchema): void {
   global.__MYDR_MEM_DB__ = db;
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
+    fs.writeFileSync(/*turbopackIgnore: true*/ DB_FILE, JSON.stringify(db, null, 2), "utf8");
   } catch {
     // Read-only serverless filesystem (Vercel) — in-memory cache remains active
   }

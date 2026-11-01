@@ -80,7 +80,7 @@ export function AdminShell({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid admin credentials");
       toast.success("Authenticated as Platform Administrator");
-      router.refresh();
+      window.location.reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -91,8 +91,7 @@ export function AdminShell({
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     toast.success("Signed out of Admin Console");
-    router.push("/admin");
-    router.refresh();
+    window.location.href = "/admin";
   };
 
   // Dedicated Secure Admin Login Gate at /admin
