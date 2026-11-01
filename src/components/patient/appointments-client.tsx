@@ -258,18 +258,9 @@ export function AppointmentsClient({
               </span>
               <span>•</span>
               <span className="tabular-nums">
-                {appt.payment?.payment_method === "clinic_reception" ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                    Pay at Clinic: {formatINR(appt.consultation_fee, true)} (₹0 Online)
-                  </span>
-                ) : (
-                  <>
-                    Paid Online: {formatINR(appt.platform_fee, true)} •{" "}
-                    <span className="text-emerald-700 dark:text-emerald-400">
-                      At Clinic: {formatINR(appt.consultation_fee, true)}
-                    </span>
-                  </>
-                )}
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                  To Give to Doctor at Clinic: {formatINR(appt.total_amount || (appt.consultation_fee + appt.platform_fee), true)} ({formatINR(appt.consultation_fee, true)} Fee + {formatINR(appt.platform_fee, true)} Platform)
+                </span>
               </span>
             </div>
           </div>
@@ -295,7 +286,12 @@ export function AppointmentsClient({
                         a.id === d.appointment.id ? d.appointment : a
                       )
                     );
-                    toast.success("Confirmed! Pay at clinic reception.");
+                    toast.success(
+                      `Confirmed! Please give ${formatINR(
+                        appt.total_amount || (appt.consultation_fee + appt.platform_fee),
+                        true
+                      )} directly to Dr. ${appt.doctor_name} at the clinic.`
+                    );
                     router.refresh();
                   } catch (e) {
                     toast.error(
@@ -304,16 +300,7 @@ export function AppointmentsClient({
                   }
                 }}
               >
-                Pay at Clinic (Confirm Now)
-              </Button>
-              <Button
-                size="sm"
-                className="bg-primary text-primary-foreground font-bold shadow-sm hover:bg-primary/90 gap-1.5"
-                asChild
-              >
-                <Link href={`/checkout?bookingId=${appt.id}`}>
-                  Pay ₹{appt.platform_fee} via UPI
-                </Link>
+                Confirm Booking (Pay {formatINR(appt.total_amount || (appt.consultation_fee + appt.platform_fee), true)} to Doctor at Clinic)
               </Button>
             </div>
           )}
@@ -584,36 +571,39 @@ export function AppointmentsClient({
                 </div>
                 <div className="border-t pt-2.5 flex justify-between">
                   <span className="text-muted-foreground">
-                    Platform Booking Fee (
+                    Doctor Consultation Fee:
+                  </span>
+                  <span className="tabular-nums font-semibold">
+                    {formatINR(receiptTarget.consultation_fee, true)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Platform Fee (
                     {receiptTarget.applied_fee_type === "percentage"
                       ? `${receiptTarget.applied_fee_rate}%`
                       : "Flat"}
                     ):
                   </span>
-                  <span className="tabular-nums font-semibold text-emerald-600">
-                    {formatINR(receiptTarget.platform_fee, true)} (Paid Online)
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Doctor Consultation Fee:
-                  </span>
-                  <span className="tabular-nums font-medium">
-                    {formatINR(receiptTarget.consultation_fee, true)} (Pay at
-                    Clinic)
+                  <span className="tabular-nums font-semibold text-primary">
+                    {formatINR(receiptTarget.platform_fee, true)}
                   </span>
                 </div>
                 <div className="border-t pt-2.5 space-y-1">
                   <div className="flex justify-between font-heading font-bold text-base">
-                    <span>Paid Online (Platform Fee):</span>
-                    <span className="text-primary tabular-nums">
-                      {formatINR(receiptTarget.platform_fee, true)}
+                    <span>Total to Give to Doctor at Clinic:</span>
+                    <span className="text-primary tabular-nums font-extrabold text-lg">
+                      {formatINR(
+                        receiptTarget.total_amount ||
+                          receiptTarget.consultation_fee + receiptTarget.platform_fee,
+                        true
+                      )}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs font-medium text-amber-700 dark:text-amber-400">
-                    <span>Payable at Clinic Counter:</span>
+                  <div className="flex justify-between text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                    <span>Online Advance Payment:</span>
                     <span className="font-bold tabular-nums">
-                      {formatINR(receiptTarget.consultation_fee, true)}
+                      ₹0.00 (Cancelled — Free Online Booking)
                     </span>
                   </div>
                 </div>

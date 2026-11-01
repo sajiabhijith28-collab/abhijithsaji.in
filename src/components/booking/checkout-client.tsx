@@ -590,35 +590,39 @@ export function CheckoutClient({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">
-                  Platform Booking Fee (
+                  Doctor Consultation Fee
+                </span>
+                <span className="tabular-nums font-semibold">
+                  {formatINR(appointment.consultation_fee, true)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">
+                  Platform Fee (
                   {appointment.applied_fee_type === "percentage"
                     ? `${appointment.applied_fee_rate}%`
                     : "Flat"}
                   )
                 </span>
-                <span className="tabular-nums font-semibold text-emerald-600">
-                  {formatINR(appointment.platform_fee, true)} (Paid Online)
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">
-                  Doctor Consultation Fee
-                </span>
-                <span className="tabular-nums font-semibold">
-                  {formatINR(appointment.consultation_fee, true)} (Pay at Clinic)
+                <span className="tabular-nums font-semibold text-primary">
+                  {formatINR(appointment.platform_fee, true)}
                 </span>
               </div>
               <div className="border-t pt-2.5 space-y-1">
                 <div className="flex justify-between font-heading font-bold text-base">
-                  <span>Paid Online Verified</span>
-                  <span className="text-emerald-600 tabular-nums">
-                    {formatINR(appointment.platform_fee, true)}
+                  <span>Total to Give to Doctor at Clinic</span>
+                  <span className="text-primary tabular-nums font-extrabold text-lg">
+                    {formatINR(
+                      (appointment.consultation_fee || 0) +
+                        (appointment.platform_fee || 0),
+                      true
+                    )}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs font-medium text-amber-700 dark:text-amber-400">
-                  <span>Balance Payable at Clinic Counter</span>
+                <div className="flex justify-between text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                  <span>Online Advance Payment</span>
                   <span className="tabular-nums font-bold">
-                    {formatINR(appointment.consultation_fee, true)}
+                    ₹0.00 (Cancelled — Free Online Booking)
                   </span>
                 </div>
               </div>
@@ -810,59 +814,111 @@ export function CheckoutClient({
           {/* Fee Summary Box */}
           <div className="rounded-2xl border bg-muted/25 p-4 space-y-2.5 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                Consultation Fee
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  Doctor Fee
-                </Badge>
+              <span className="text-muted-foreground">
+                Doctor Consultation Fee
               </span>
-              <span className="font-medium tabular-nums">
+              <span className="font-semibold tabular-nums">
                 {formatINR(appointment.consultation_fee, true)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">
-                Platform Booking Fee (10% of Consultation Fee)
+                Platform Fee (10% of Consultation Fee)
               </span>
               <span className="font-semibold text-primary tabular-nums">
                 {formatINR(appointment.platform_fee, true)}
               </span>
             </div>
-            <div className="border-t pt-2.5 flex justify-between items-baseline">
-              <span className="font-heading font-bold text-base">
-                Pay Online Now (10%)
-              </span>
-              <span className="font-heading font-extrabold text-2xl text-primary tabular-nums">
-                {formatINR(appointment.platform_fee, true)}
-              </span>
-            </div>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-900 dark:text-amber-200 flex justify-between items-center">
-              <span>Pay at Clinic Reception:</span>
-              <span className="font-heading font-bold tabular-nums">
-                {formatINR(appointment.consultation_fee, true)}
-              </span>
+            <div className="border-t pt-2.5 space-y-1">
+              <div className="flex justify-between font-heading font-bold text-base">
+                <span>Total to Give to Doctor</span>
+                <span className="text-primary tabular-nums font-extrabold text-xl">
+                  {formatINR(
+                    (appointment.consultation_fee || 0) +
+                      (appointment.platform_fee || 0),
+                    true
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                <span>Online Advance Payment</span>
+                <span className="font-bold tabular-nums">
+                  ₹0.00 (Cancelled — Free Online Booking)
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Right: Payment Options (10% Online via UPI vs Pay at Clinic) */}
+      {/* Right: Primary 1-Click Confirmation (Direct to Doctor at Clinic) */}
       <div className="lg:col-span-6 space-y-6">
-        {/* PRIMARY OPTION: Direct UPI Payment Card (10% on Consultation Fee) */}
-        <Card className="border-primary/25 shadow-xl">
-          <CardHeader className="border-b bg-primary/[0.04]">
+        {/* PRIMARY 1-CLICK CONFIRMATION CARD (Direct to Doctor at Clinic) */}
+        <Card className="border-2 border-emerald-600/40 shadow-xl overflow-hidden">
+          <CardHeader className="border-b bg-emerald-500/[0.08]">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Smartphone className="h-5 w-5 text-primary" />
-                Pay 10% Booking Fee via UPI
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                <Building2 className="h-5 w-5 text-emerald-600" />
+                Confirm &amp; Book Appointment
               </CardTitle>
-              <Badge variant="default" className="font-mono text-xs">
-                10% = {formatINR(appointment.platform_fee, true)}
+              <Badge variant="default" className="bg-emerald-600 text-white font-mono text-xs">
+                Free Online Booking
               </Badge>
             </div>
-            <CardDescription>
-              Online payment is 10% on consultation fee ({formatINR(appointment.platform_fee, true)} on {formatINR(appointment.consultation_fee, true)}). Scan the QR code with Google Pay, PhonePe, Paytm, or BHIM.
+            <CardDescription className="text-xs">
+              Online advance payment is cancelled. Please give the consultation fee ({formatINR(appointment.consultation_fee, true)}) and platform fee ({formatINR(appointment.platform_fee, true)}) directly to Dr. {appointment.doctor_name} at the clinic reception.
             </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-6 space-y-4">
+            <div className="rounded-xl border bg-muted/30 p-4 space-y-2 text-sm">
+              <div className="flex justify-between items-center text-muted-foreground text-xs">
+                <span>Total Payable at Clinic:</span>
+                <span className="font-heading font-extrabold text-lg text-foreground tabular-nums">
+                  {formatINR(
+                    (appointment.consultation_fee || 0) +
+                      (appointment.platform_fee || 0),
+                    true
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-muted-foreground border-t pt-1.5">
+                <span>Advance Paid Online:</span>
+                <span className="font-bold text-emerald-600">₹0.00</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleSwitchToPayAtClinic}
+              disabled={processing}
+              className="w-full font-bold shadow-md text-sm py-6 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {processing ? (
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+              )}
+              Confirm Booking (Pay {formatINR((appointment.consultation_fee || 0) + (appointment.platform_fee || 0), true)} to Doctor at Clinic)
+            </Button>
+
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span>Instant Confirmation • Official Booking Slip Generated</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Optional Secondary UPI Reference Section */}
+        <Card className="border-muted shadow-sm">
+          <CardHeader className="border-b bg-muted/20 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                <Smartphone className="h-4 w-4" />
+                Optional: Already paid via UPI?
+              </CardTitle>
+            </div>
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">

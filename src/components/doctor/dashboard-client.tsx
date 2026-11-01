@@ -202,10 +202,13 @@ export function DoctorDashboardClient({
               Ref: {appt.booking_code}
             </span>
             <span>
-              Clinic Fee:{" "}
+              To Collect:{" "}
               <strong className="text-foreground">
-                {formatINR(appt.net_doctor_earning)}
-              </strong>
+                {formatINR(appt.total_amount || appt.net_doctor_earning)}
+              </strong>{" "}
+              <span className="text-muted-foreground text-[11px]">
+                ({formatINR(appt.consultation_fee)} + {formatINR(appt.platform_fee)})
+              </span>
             </span>
             {appt.payment?.upi_utr && (
               <span className="font-mono text-[11px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">

@@ -164,25 +164,25 @@ export default async function DoctorProfilePage({
               <div className="rounded-xl border bg-muted/40 p-4 grid sm:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-xs text-muted-foreground block">
-                    Pay Online to Book ({feeInfo.feeLabel})
-                  </span>
-                  <span className="font-heading font-bold text-base text-primary tabular-nums">
-                    {formatINR(feeInfo.onlinePayable)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs text-muted-foreground block">
-                    Pay at Clinic (Consultation Fee)
+                    Doctor Consultation Fee
                   </span>
                   <span className="font-heading font-bold text-base tabular-nums">
-                    {formatINR(feeInfo.clinicPayable)}
+                    {formatINR(feeInfo.consultationFee)}
                   </span>
                 </div>
                 <div>
                   <span className="text-xs text-muted-foreground block">
-                    Combined Visit Total
+                    {feeInfo.feeLabel}
                   </span>
-                  <span className="font-heading font-semibold text-base text-muted-foreground tabular-nums">
+                  <span className="font-heading font-bold text-base text-primary tabular-nums">
+                    {formatINR(feeInfo.platformFee)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">
+                    Total to Give to Doctor
+                  </span>
+                  <span className="font-heading font-bold text-base text-emerald-700 dark:text-emerald-400 tabular-nums">
                     {formatINR(feeInfo.totalAmount)}
                   </span>
                 </div>

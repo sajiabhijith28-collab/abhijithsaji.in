@@ -929,22 +929,33 @@ export function createBookingLockAndOrder(params: {
     total_amount: feeBreakdown.onlinePayable,
     currency: "INR",
     status: isZeroOnlineFee ? "paid" : "created",
-    payment_method: params.payAtClinic
-      ? "clinic_reception"
-      : isZeroOnlineFee
-      ? "clinic_direct"
-      : undefined,
-    paid_at: isZeroOnlineFee ? nowIso : undefined,
+    payment_method: "direct_to_doctor",
+    paid_at: nowIso,
     created_at: nowIso,
     updated_at: nowIso,
   };
 
   db.appointments.unshift(appt);
   db.payments.unshift(payment);
+
+  const enriched = enrichAppointment(db, appt);
+
+  // Dispatch confirmation notification for patient
+  db.notifications.unshift({
+    id: `notif-${crypto.randomUUID().slice(0, 8)}`,
+    user_id: appt.patient_id,
+    appointment_id: appt.id,
+    channel: "sms",
+    title: `Booking Confirmed — ${appt.booking_code}`,
+    message: `Appointment confirmed with ${enriched.doctor_name} at ${enriched.hospital_name} on ${appt.appointment_date} at ${formatTime12h(appt.slot_time)}. Please give consultation fee of ₹${appt.consultation_fee} and platform fee of ₹${appt.platform_fee} (Total: ₹${appt.total_amount}) directly to the doctor at the clinic.`,
+    is_read: false,
+    sent_at: nowIso,
+  });
+
   persistDb(db);
 
   return {
-    appointment: enrichAppointment(db, appt),
+    appointment: enriched,
     payment,
   };
 }

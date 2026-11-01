@@ -164,11 +164,14 @@ export function DoctorAppointmentsClient({
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-muted-foreground block">
-                      Clinic Fee
+                    <span className="text-muted-foreground block text-[11px]">
+                      Collect at Clinic
                     </span>
-                    <span className="font-heading font-bold text-sm tabular-nums">
-                      {formatINR(a.net_doctor_earning)}
+                    <span className="font-heading font-bold text-sm tabular-nums text-emerald-700 dark:text-emerald-400">
+                      {formatINR(a.total_amount || a.net_doctor_earning)}
+                    </span>
+                    <span className="block text-[10px] text-muted-foreground">
+                      ({formatINR(a.consultation_fee)} + {formatINR(a.platform_fee)})
                     </span>
                   </div>
                 </div>
@@ -285,7 +288,12 @@ export function DoctorAppointmentsClient({
                       </div>
                     </td>
                     <td className="px-4 py-3.5 font-semibold tabular-nums">
-                      {formatINR(a.net_doctor_earning)}
+                      <div className="text-emerald-700 dark:text-emerald-400 font-bold">
+                        {formatINR(a.total_amount || a.net_doctor_earning)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-normal">
+                        {formatINR(a.consultation_fee)} doc + {formatINR(a.platform_fee)} fee
+                      </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <Badge

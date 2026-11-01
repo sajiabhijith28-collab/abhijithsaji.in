@@ -85,13 +85,13 @@ export function SlotPickerWidget({
           </div>
           <div className="text-right">
             <div className="font-heading text-xl font-bold text-primary tabular-nums">
-              {formatINR(consultationFee)}
+              {formatINR(consultationFee + platformFeePreview)}
             </div>
             <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 block">
-              Pay at Clinic
+              Pay Doctor at Clinic
             </span>
             <span className="text-[10px] text-muted-foreground">
-              Book online for just {formatINR(platformFeePreview)}
+              ₹0 Online • Direct to Doctor
             </span>
           </div>
         </div>

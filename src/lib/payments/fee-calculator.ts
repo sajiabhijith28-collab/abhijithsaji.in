@@ -55,14 +55,15 @@ export function calculateBookingFees(
       ? roundPaise((consultationFee * appliedFeeRate) / 100)
       : roundPaise(appliedFeeRate);
 
-  const onlinePayable = platformFee;
-  const clinicPayable = consultationFee;
+  // Online payment cancelled — platform fee and consultation fee are given directly to doctor at clinic
+  const onlinePayable = 0;
+  const clinicPayable = roundPaise(consultationFee + platformFee);
   const totalAmount = roundPaise(consultationFee + platformFee);
 
   const feeLabel =
     appliedFeeType === "percentage"
-      ? `Platform Booking Fee (${appliedFeeRate}%)`
-      : `Platform Booking Fee (Flat)`;
+      ? `Platform Fee (${appliedFeeRate}%)`
+      : `Platform Fee (Flat)`;
 
   return {
     consultationFee,
@@ -73,7 +74,7 @@ export function calculateBookingFees(
     platformFee,
     onlinePayable,
     totalAmount,
-    netDoctorEarning: consultationFee,
+    netDoctorEarning: totalAmount,
     feeLabel,
   };
 }
