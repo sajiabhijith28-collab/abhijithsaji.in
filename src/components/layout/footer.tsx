@@ -39,7 +39,7 @@ export function Footer() {
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-[#c9a353]/35 bg-white/[0.06] px-2.5 py-1">
                 <Lock className="h-3.5 w-3.5 text-[#dfc074]" />
-                256-bit Razorpay Secured
+                Direct UPI &amp; Bank Verified
               </span>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function Footer() {
 
         <div className="mt-10 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© {new Date().getFullYear()} My Dr Healthcare Technologies Pvt. Ltd. All rights reserved.</p>
-          <p>Built with Next.js, Supabase RLS &amp; Razorpay India</p>
+          <p>Built with Next.js, Supabase RLS &amp; Direct UPI Payments</p>
         </div>
       </div>
     </footer>

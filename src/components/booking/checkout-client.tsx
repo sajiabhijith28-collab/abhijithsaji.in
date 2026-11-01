@@ -706,22 +706,20 @@ export function CheckoutClient({
         </CardContent>
       </Card>
 
-      {/* Right: Direct UPI Payment Links + UTR Submission (No QR) */}
+      {/* Right: Direct UPI Payment Links + UTR Submission (Direct UPI — No Razorpay) */}
       <Card className="lg:col-span-6 border-primary/25 shadow-xl">
         <CardHeader className="border-b bg-primary/[0.04]">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              {isUpiDirectMode ? "Pay via UPI App" : "Online Payment"}
+              Direct UPI Payment
             </CardTitle>
             <Badge variant="default" className="font-mono text-xs">
               {formatINR(appointment.platform_fee, true)}
             </Badge>
           </div>
           <CardDescription>
-            {isUpiDirectMode
-              ? "Click your preferred UPI payment option below to pay the platform fee, then submit your 12-digit UTR number."
-              : "Complete online payment to confirm your slot."}
+            Pay the platform booking fee directly to the clinic&apos;s UPI ID ({receivingUpiId}) using Google Pay, PhonePe, Paytm, or BHIM. No Razorpay account needed.
           </CardDescription>
         </CardHeader>
 

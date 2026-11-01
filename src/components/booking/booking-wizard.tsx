@@ -498,7 +498,7 @@ export function BookingWizard({
 
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              Slot locked for 10 mins • Razorpay Secured
+              Slot locked for 10 mins • 100% Direct UPI Transfer
             </div>
           </CardContent>
         </Card>
