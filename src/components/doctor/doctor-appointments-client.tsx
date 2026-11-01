@@ -134,12 +134,12 @@ export function DoctorAppointmentsClient({
                       a.status === "confirmed"
                         ? "success"
                         : a.status === "verification_pending"
-                        ? "warning"
-                        : a.status === "completed"
-                        ? "default"
-                        : a.status === "cancelled"
-                        ? "destructive"
-                        : "secondary"
+                          ? "warning"
+                          : a.status === "completed"
+                            ? "default"
+                            : a.status === "cancelled"
+                              ? "destructive"
+                              : "secondary"
                     }
                     className="capitalize shrink-0"
                   >
@@ -174,7 +174,7 @@ export function DoctorAppointmentsClient({
                 </div>
 
                 {a.status === "verification_pending" ||
-                a.status === "pending_payment" ? (
+                  a.status === "pending_payment" ? (
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -293,12 +293,12 @@ export function DoctorAppointmentsClient({
                           a.status === "confirmed"
                             ? "success"
                             : a.status === "verification_pending"
-                            ? "warning"
-                            : a.status === "completed"
-                            ? "default"
-                            : a.status === "cancelled"
-                            ? "destructive"
-                            : "secondary"
+                              ? "warning"
+                              : a.status === "completed"
+                                ? "default"
+                                : a.status === "cancelled"
+                                  ? "destructive"
+                                  : "secondary"
                         }
                         className="capitalize"
                       >
@@ -307,7 +307,7 @@ export function DoctorAppointmentsClient({
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {a.status === "verification_pending" ||
-                      a.status === "pending_payment" ? (
+                        a.status === "pending_payment" ? (
                         <div className="inline-flex items-center gap-1.5">
                           <Button
                             size="sm"

@@ -172,15 +172,61 @@ export function CheckoutClient({
     }
   };
 
-  const handleSubmitUpiUtr = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanedUtr = upiUtr.replace(/\D/g, "");
-    if (cleanedUtr.length !== 12) {
-      toast.error(
-        "Please enter the 12-digit UPI UTR / Transaction Reference Number from your UPI app."
+  const handleSwitchToPayAtClinic = async () => {
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/bookings/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "pay_at_clinic" }),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error || "Could not switch to pay at clinic");
+
+      try {
+        const raw = window.localStorage.getItem("mydr_user_bookings");
+        const existing = raw ? JSON.parse(raw) : [];
+        const updated = [
+          data.appointment,
+          ...existing.filter((a: any) => a.id !== data.appointment.id),
+        ];
+        window.localStorage.setItem(
+          "mydr_user_bookings",
+          JSON.stringify(updated)
+        );
+        fetch("/api/bookings/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookings: [data.appointment] }),
+        }).catch(() => {});
+      } catch {
+        // ignore
+      }
+
+      setAppointment(data.appointment);
+      toast.success(
+        `Appointment confirmed! Pay ${formatINR(
+          appointment.consultation_fee,
+          true
+        )} directly at the clinic reception counter.`
       );
-      return;
+      router.push("/account/appointments");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to switch");
+    } finally {
+      setProcessing(false);
     }
+  };
+
+  const handleSubmitUpiUtr = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanedUtr = upiUtr.replace(/\D/g, "");
+    const effectiveUtr =
+      cleanedUtr.length >= 4
+        ? cleanedUtr
+        : `VERIFY-${Date.now().toString().slice(-6)}`;
 
     setProcessing(true);
     try {
@@ -189,14 +235,34 @@ export function CheckoutClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           appointmentId: appointment.id,
-          upi_utr: cleanedUtr,
+          upi_utr: effectiveUtr,
           upi_payer_vpa: upiPayerVpa.trim() || undefined,
           upi_app: selectedUpiApp,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Could not submit UPI UTR");
+        throw new Error(data.error || "Could not submit UPI reference");
+      }
+
+      try {
+        const raw = window.localStorage.getItem("mydr_user_bookings");
+        const existing = raw ? JSON.parse(raw) : [];
+        const updated = [
+          data.appointment,
+          ...existing.filter((a: any) => a.id !== data.appointment.id),
+        ];
+        window.localStorage.setItem(
+          "mydr_user_bookings",
+          JSON.stringify(updated)
+        );
+        fetch("/api/bookings/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookings: [data.appointment] }),
+        }).catch(() => {});
+      } catch {
+        // ignore
       }
 
       setAppointment(data.appointment);
@@ -209,10 +275,11 @@ export function CheckoutClient({
           `UTR submitted! Your slot is held while Admin approves your payment.`
         );
       }
+      router.push("/account/appointments");
       router.refresh();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to submit UPI UTR"
+        err instanceof Error ? err.message : "Failed to submit UPI reference"
       );
     } finally {
       setProcessing(false);
@@ -783,247 +850,274 @@ export function CheckoutClient({
         </CardContent>
       </Card>
 
-      {/* Right: Direct UPI Payment Links + UTR Submission (Direct UPI — No Razorpay) */}
-      <Card className="lg:col-span-6 border-primary/25 shadow-xl">
-        <CardHeader className="border-b bg-primary/[0.04]">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Smartphone className="h-5 w-5 text-primary" />
-              Direct UPI Payment
-            </CardTitle>
-            <Badge variant="default" className="font-mono text-xs">
-              {formatINR(appointment.platform_fee, true)}
+      {/* Right: Payment Options (Pay at Clinic Reception vs Direct UPI) */}
+      <div className="lg:col-span-6 space-y-6">
+        {/* OPTION 1: Pay at Clinic Reception Banner */}
+        <div className="rounded-2xl border-2 border-emerald-600/40 bg-emerald-500/[0.08] p-5 space-y-3 shadow-sm">
+          <div className="flex items-center justify-between">
+            <Badge className="bg-emerald-600 text-white font-bold text-xs">
+              OPTION 1 — PAY AT CLINIC RECEPTION
             </Badge>
+            <span className="font-heading font-extrabold text-emerald-600 text-base">
+              ₹0 Online
+            </span>
           </div>
-          <CardDescription>
-            Pay the platform booking fee directly to the clinic&apos;s UPI ID ({receivingUpiId}) using Google Pay, PhonePe, Paytm, or BHIM. No Razorpay account needed.
-          </CardDescription>
-        </CardHeader>
+          <div>
+            <h3 className="font-heading font-bold text-base text-foreground">
+              Prefer to pay directly at the clinic?
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              Skip online UPI entirely. Lock this slot for ₹0 online advance now and pay the consultation fee of{" "}
+              <strong className="text-foreground">{formatINR(appointment.consultation_fee, true)}</strong>{" "}
+              at the clinic reception counter.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleSwitchToPayAtClinic}
+            disabled={processing}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md text-sm py-5"
+          >
+            {processing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Building2 className="h-4 w-4 mr-2" />
+            )}
+            Confirm Booking (Pay at Clinic Reception — ₹0 Online)
+          </Button>
+        </div>
 
-        <CardContent className="p-6 space-y-6">
-          {isUpiDirectMode ? (
-            <>
-              {/* Step 1: Clickable UPI Payment Option Deep Links (No QR Code) */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-heading font-bold uppercase tracking-wider text-muted-foreground">
-                    Step 1 — Choose UPI Payment Option
-                  </span>
-                  <button
-                    type="button"
-                    onClick={copyUpiId}
-                    className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-primary hover:underline"
-                  >
-                    {copiedUpi ? (
-                      <Check className="h-3.5 w-3.5 text-emerald-600" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {receivingUpiId}
-                  </button>
-                </div>
+        {/* OPTION 2: Direct UPI Payment Card */}
+        <Card className="border-primary/25 shadow-xl">
+          <CardHeader className="border-b bg-primary/[0.04]">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-primary" />
+                OPTION 2 — Pay Platform Fee via UPI
+              </CardTitle>
+              <Badge variant="default" className="font-mono text-xs">
+                {formatINR(appointment.platform_fee, true)}
+              </Badge>
+            </div>
+            <CardDescription>
+              Scan the QR code with Google Pay, PhonePe, Paytm, or BHIM, or tap an app below.
+            </CardDescription>
+          </CardHeader>
 
-                {/* Primary One-Click Universal UPI Payment Link */}
-                <Button
-                  size="xl"
-                  className="w-full font-bold shadow-md justify-between px-5"
-                  disabled={secondsLeft === 0}
-                  asChild
-                >
-                  <a
-                    href={primaryUpiHref}
-                    onClick={() => {
-                      setSelectedUpiApp("any_upi");
-                      setUpiLaunched(true);
-                    }}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Smartphone className="h-5 w-5" />
-                      Pay {formatINR(appointment.platform_fee, true)} via UPI App
+          <CardContent className="p-6 space-y-6">
+            {isUpiDirectMode ? (
+              <>
+                {/* Step 1: Scan & Pay QR Code */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-heading font-bold uppercase tracking-wider text-muted-foreground">
+                      Step 1 — Scan QR Code or Pay via UPI
                     </span>
-                    <ExternalLink className="h-4 w-4 opacity-80" />
-                  </a>
-                </Button>
+                    <button
+                      type="button"
+                      onClick={copyUpiId}
+                      className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-primary hover:underline"
+                    >
+                      {copiedUpi ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      {receivingUpiId}
+                    </button>
+                  </div>
 
-                {/* Specific UPI App Links (GPay, PhonePe, Paytm, BHIM) */}
-                <div className="grid grid-cols-2 gap-2.5 pt-1">
-                  {upiOptions
-                    .filter((opt) => opt.id !== "any_upi")
-                    .map((opt) => (
-                      <a
-                        key={opt.id}
-                        href={opt.href}
-                        onClick={() => {
-                          setSelectedUpiApp(opt.id);
-                          setUpiLaunched(true);
-                        }}
-                        className={`group rounded-xl border p-3 flex items-center justify-between text-left transition-all hover:border-primary hover:bg-primary/[0.04] ${
-                          selectedUpiApp === opt.id && upiLaunched
-                            ? "border-primary bg-primary/[0.06] ring-1 ring-primary"
-                            : ""
-                        }`}
-                      >
-                        <div>
-                          <div className="font-heading font-bold text-xs sm:text-sm">
-                            {opt.label}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground">
-                            {formatINR(appointment.platform_fee, true)}
+                  {/* Prominent QR Code Box */}
+                  <div className="rounded-2xl border-2 border-primary/20 bg-muted/20 p-4 sm:p-5 space-y-4">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold inline-flex items-center gap-1.5 text-foreground text-sm">
+                        <QrCode className="h-4 w-4 text-primary" />
+                        Scan with GPay, PhonePe, Paytm or BHIM
+                      </span>
+                      <Badge variant="outline" className="text-[10px] font-bold border-primary text-primary">
+                        Exact Amount: {formatINR(appointment.platform_fee, true)}
+                      </Badge>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-5 bg-white dark:bg-slate-900 rounded-xl p-4 border shadow-sm">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                          primaryUpiHref
+                        )}`}
+                        alt="UPI QR Code"
+                        className="h-36 w-36 rounded-lg border shadow-xs shrink-0"
+                      />
+                      <div className="text-xs space-y-2 text-center sm:text-left flex-1">
+                        <div className="space-y-0.5">
+                          <span className="text-[11px] text-muted-foreground uppercase font-semibold">
+                            Receiving UPI ID ({receivingPayeeName}):
+                          </span>
+                          <div className="font-mono font-bold text-sm text-foreground flex items-center justify-center sm:justify-start gap-2">
+                            <span>{receivingUpiId}</span>
+                            <button
+                              type="button"
+                              onClick={copyUpiId}
+                              className="p-1 rounded hover:bg-muted text-primary"
+                              title="Copy UPI ID"
+                            >
+                              {copiedUpi ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
                           </div>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                      </a>
-                    ))}
-                </div>
-
-                {/* Desktop QR Code Accordion / Fallback */}
-                <div className="rounded-xl border bg-muted/20 p-3.5 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold inline-flex items-center gap-1.5 text-foreground">
-                      <QrCode className="h-4 w-4 text-primary" />
-                      Paying from Desktop or Another Phone?
-                    </span>
-                    <Badge variant="outline" className="text-[10px]">Scan &amp; Pay</Badge>
+                        <p className="text-muted-foreground text-[11px] leading-relaxed">
+                          Scan with your phone to pay the platform booking fee of{" "}
+                          <strong className="text-foreground">
+                            {formatINR(appointment.platform_fee, true)}
+                          </strong>
+                          . Once sent, click below to confirm:
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => handleSubmitUpiUtr()}
+                          disabled={processing || secondsLeft === 0}
+                          className="w-full sm:w-auto font-bold bg-primary text-primary-foreground shadow-sm mt-1"
+                        >
+                          {processing ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
+                          )}
+                          I Have Sent ₹35 via UPI (Confirm Now)
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-slate-900 rounded-lg p-3 border">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                        primaryUpiHref
-                      )}`}
-                      alt="UPI QR Code"
-                      className="h-28 w-28 rounded-md border shadow-xs shrink-0"
-                    />
-                    <div className="text-xs space-y-1.5 text-center sm:text-left">
-                      <p className="font-medium text-foreground">
-                        Scan with any UPI App: GPay, PhonePe, Paytm, or BHIM
-                      </p>
-                      <p className="text-muted-foreground text-[11px]">
-                        Exact amount <strong>{formatINR(appointment.platform_fee, true)}</strong> and reference are automatically filled.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={copyUpiId}
-                        className="text-primary font-mono text-[11px] font-bold hover:underline inline-flex items-center gap-1"
-                      >
-                        <Copy className="h-3 w-3" /> Copy VPA: {receivingUpiId}
-                      </button>
+
+                  {/* Mobile Deep Links */}
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Or Open App Directly (Mobile Phones Only):
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {upiOptions
+                        .filter((opt) => opt.id !== "any_upi")
+                        .map((opt) => (
+                          <a
+                            key={opt.id}
+                            href={opt.href}
+                            onClick={() => {
+                              setSelectedUpiApp(opt.id);
+                              setUpiLaunched(true);
+                            }}
+                            className="rounded-xl border p-2.5 flex items-center justify-between text-left hover:border-primary hover:bg-primary/[0.04] transition-all"
+                          >
+                            <div>
+                              <div className="font-heading font-bold text-xs">{opt.label}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {formatINR(appointment.platform_fee, true)}
+                              </div>
+                            </div>
+                            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+                          </a>
+                        ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border bg-muted/40 px-3.5 py-2.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Receiving UPI ID ({receivingPayeeName}):
-                  </span>
-                  <button
-                    type="button"
-                    onClick={copyUpiId}
-                    className="font-mono font-bold text-foreground inline-flex items-center gap-1.5 hover:text-primary"
+                {/* Step 2: Confirm Payment Reference */}
+                <form
+                  onSubmit={handleSubmitUpiUtr}
+                  className="space-y-4 border-t pt-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-heading font-bold uppercase tracking-wider text-muted-foreground">
+                      Step 2 — Submit UPI Reference (Optional)
+                    </span>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      {upiUtr.length} digits entered
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="upi-utr">
+                      12-Digit UPI UTR / Transaction Reference No.
+                    </Label>
+                    <Input
+                      id="upi-utr"
+                      inputMode="numeric"
+                      maxLength={16}
+                      placeholder="e.g. 430518294012 (optional if paid via QR)"
+                      value={upiUtr}
+                      onChange={(e) =>
+                        setUpiUtr(e.target.value.replace(/\D/g, "").slice(0, 16))
+                      }
+                      className="font-mono text-sm tracking-wider"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Found in your GPay / PhonePe / Paytm receipt as <strong>UPI Ref No</strong> or <strong>UTR</strong>.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="upi-payer">
+                      Your UPI ID or Payer Name (Optional)
+                    </Label>
+                    <Input
+                      id="upi-payer"
+                      placeholder="e.g. yourname@okaxis"
+                      value={upiPayerVpa}
+                      onChange={(e) => setUpiPayerVpa(e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full font-bold shadow-md bg-accent text-accent-foreground hover:bg-accent/90"
+                    disabled={processing || secondsLeft === 0}
                   >
-                    {receivingUpiId}
-                    <Copy className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
+                    {processing ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                    )}
+                    Confirm UPI Payment &amp; Finalize Booking
+                  </Button>
 
-              {/* Step 2: Submit 12-Digit UPI UTR / Ref No. */}
-              <form
-                onSubmit={handleSubmitUpiUtr}
-                className="space-y-4 border-t pt-5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-heading font-bold uppercase tracking-wider text-muted-foreground">
-                    Step 2 — Confirm Your 12-Digit UPI UTR
-                  </span>
-                  <span className="text-[11px] font-mono text-muted-foreground">
-                    {upiUtr.length}/12 digits
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="upi-utr">
-                    12-Digit UPI UTR / Transaction Reference No. *
-                  </Label>
-                  <Input
-                    id="upi-utr"
-                    inputMode="numeric"
-                    maxLength={12}
-                    placeholder="e.g. 430518294012"
-                    value={upiUtr}
-                    onChange={(e) =>
-                      setUpiUtr(e.target.value.replace(/\D/g, "").slice(0, 12))
-                    }
-                    className="font-mono text-base tracking-widest"
-                    required
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Found in your Google Pay / PhonePe / Paytm payment receipt
-                    as <strong>UPI transaction ID</strong> or{" "}
-                    <strong>UTR</strong>.
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Once submitted, your slot is instantly verified and reserved on the doctor&apos;s schedule.
                   </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="upi-payer">
-                    Your UPI ID or Sender Name (Optional)
-                  </Label>
-                  <Input
-                    id="upi-payer"
-                    placeholder="e.g. yourname@okicici"
-                    value={upiPayerVpa}
-                    onChange={(e) => setUpiPayerVpa(e.target.value)}
-                  />
-                </div>
-
+                </form>
+              </>
+            ) : (
+              <>
                 <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full font-bold shadow-md bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={
-                    processing || secondsLeft === 0 || upiUtr.length !== 12
-                  }
+                  size="xl"
+                  className="w-full font-bold shadow-md"
+                  disabled={processing || secondsLeft === 0}
+                  onClick={handleRazorpayClick}
                 >
                   {processing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   ) : (
-                    <ShieldCheck className="h-4 w-4" />
+                    <Lock className="h-4 w-4 mr-2" />
                   )}
-                  Submit Payment &amp; Confirm Booking
+                  Pay {formatINR(appointment.platform_fee, true)} Online to Confirm
                 </Button>
 
-                <p className="text-[11px] text-muted-foreground text-center">
-                  Once your 12-digit UTR is submitted, your booking is immediately
-                  confirmed and reserved on the doctor&apos;s schedule.
-                </p>
-              </form>
-            </>
-          ) : (
-            <>
-              <Button
-                size="xl"
-                className="w-full font-bold shadow-md"
-                disabled={processing || secondsLeft === 0}
-                onClick={handleRazorpayClick}
-              >
-                {processing ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Lock className="h-4 w-4" />
-                )}
-                Pay {formatINR(appointment.platform_fee, true)} Online to Confirm
-              </Button>
-
-              <div className="space-y-2 text-[11px] text-muted-foreground text-center">
-                <p className="inline-flex items-center gap-1 justify-center">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  Server-verified Razorpay HMAC-SHA256 Checkout
-                </p>
-                <p>Supports UPI, Cards &amp; Netbanking</p>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+                <div className="space-y-2 text-[11px] text-muted-foreground text-center">
+                  <p className="inline-flex items-center gap-1 justify-center">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    Server-verified Razorpay HMAC-SHA256 Checkout
+                  </p>
+                  <p>Supports UPI, Cards &amp; Netbanking</p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Optional Razorpay Test Simulator Modal (only used when gateway mode = razorpay without live keys) */}
       <Dialog open={simModalOpen} onOpenChange={setSimModalOpen}>

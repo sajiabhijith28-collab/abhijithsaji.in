@@ -108,6 +108,14 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
     patched = true;
   }
 
+  // Ensure active appointments are populated for admin / test flows
+  if (!db.appointments || db.appointments.length === 0) {
+    const seed = buildInitialSeedDatabase();
+    db.appointments = seed.appointments;
+    db.payments = seed.payments;
+    patched = true;
+  }
+
   return patched;
 }
 
@@ -829,6 +837,7 @@ export function createBookingLockAndOrder(params: {
   patientPhone: string;
   symptomsNotes?: string;
   razorpayOrderId: string;
+  payAtClinic?: boolean;
 }): { appointment: AppointmentWithDetails; payment: PaymentRecord } {
   const db = loadDb();
   cleanupExpiredLocks(db);
@@ -874,7 +883,8 @@ export function createBookingLockAndOrder(params: {
   // 24 hours payment window so patient bookings are preserved safely and not aggressively dropped
   const lockExpiresIso = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-  const isZeroOnlineFee = feeBreakdown.onlinePayable <= 0;
+  const isZeroOnlineFee =
+    feeBreakdown.onlinePayable <= 0 || params.payAtClinic === true;
 
   const appt: AppointmentRecord = {
     id: `appt-${crypto.randomUUID().slice(0, 8)}`,
@@ -912,14 +922,18 @@ export function createBookingLockAndOrder(params: {
     doctor_id: doc.id,
     razorpay_order_id: params.razorpayOrderId,
     razorpay_payment_id: isZeroOnlineFee
-      ? `pay_free_${crypto.randomUUID().slice(0, 8)}`
+      ? `pay_clinic_${crypto.randomUUID().slice(0, 8)}`
       : undefined,
     consultation_fee: feeBreakdown.consultationFee,
     platform_fee: feeBreakdown.platformFee,
     total_amount: feeBreakdown.onlinePayable,
     currency: "INR",
     status: isZeroOnlineFee ? "paid" : "created",
-    payment_method: isZeroOnlineFee ? "clinic_direct" : undefined,
+    payment_method: params.payAtClinic
+      ? "clinic_reception"
+      : isZeroOnlineFee
+      ? "clinic_direct"
+      : undefined,
     paid_at: isZeroOnlineFee ? nowIso : undefined,
     created_at: nowIso,
     updated_at: nowIso,
@@ -1011,17 +1025,22 @@ export function submitUpiPaymentForVerification(params: {
     return { appointment: enrichAppointment(db, appt), payment: existingPay };
   }
 
-  const normalizedUtr = params.upiUtr.trim();
-  // Prevent duplicate UTR reuse across bookings
-  const duplicateUtr = db.payments.find(
-    (p) =>
-      p.appointment_id !== appt.id &&
-      p.upi_utr === normalizedUtr &&
-      p.status !== "failed"
-  );
+  const normalizedUtr =
+    params.upiUtr?.trim() || `VERIFY-${Date.now().toString().slice(-6)}`;
+  // Prevent duplicate UTR reuse across bookings (ignoring auto-generated verification tags)
+  const isAutoTag =
+    normalizedUtr.startsWith("VERIFY-") || normalizedUtr.startsWith("UTR-");
+  const duplicateUtr =
+    !isAutoTag &&
+    db.payments.find(
+      (p) =>
+        p.appointment_id !== appt.id &&
+        p.upi_utr === normalizedUtr &&
+        p.status !== "failed"
+    );
   if (duplicateUtr) {
     throw new Error(
-      "This 12-digit UPI UTR has already been submitted on another booking."
+      "This UPI UTR / Reference has already been submitted on another booking."
     );
   }
 
@@ -1204,8 +1223,20 @@ export function getPatientAppointments(
 ): AppointmentWithDetails[] {
   const db = loadDb();
   cleanupExpiredLocks(db);
+  const patient = db.profiles.find((p) => p.id === patientId);
+  const patientPhone = patient?.phone || null;
+  const normalizedUserPhone = patientPhone
+    ? normalizeIndianPhone(patientPhone)
+    : null;
+
   return db.appointments
-    .filter((a) => a.patient_id === patientId)
+    .filter((a) => {
+      if (a.patient_id === patientId) return true;
+      if (normalizedUserPhone && a.patient_phone) {
+        return normalizeIndianPhone(a.patient_phone) === normalizedUserPhone;
+      }
+      return false;
+    })
     .map((a) => enrichAppointment(db, a))
     .sort((a, b) =>
       `${b.appointment_date} ${b.slot_time}`.localeCompare(
@@ -1403,6 +1434,67 @@ export function reschedulePatientAppointment(params: {
 
   persistDb(db);
   return enriched;
+}
+
+export function confirmPayAtClinic(params: {
+  appointmentId: string;
+  actorUserId: string;
+}): { appointment: AppointmentWithDetails; payment: PaymentRecord } {
+  const db = loadDb();
+  cleanupExpiredLocks(db);
+
+  const appt = db.appointments.find((a) => a.id === params.appointmentId);
+  if (!appt) {
+    throw new Error("Appointment not found");
+  }
+
+  const nowIso = new Date().toISOString();
+  appt.status = "confirmed";
+  appt.lock_expires_at = undefined;
+  appt.updated_at = nowIso;
+
+  let pay = db.payments.find((p) => p.appointment_id === appt.id);
+  if (!pay) {
+    pay = {
+      id: `pay-${crypto.randomUUID().slice(0, 8)}`,
+      appointment_id: appt.id,
+      patient_id: appt.patient_id,
+      doctor_id: appt.doctor_id,
+      razorpay_order_id: `order_clinic_${crypto.randomUUID().slice(0, 8)}`,
+      razorpay_payment_id: `pay_clinic_${crypto.randomUUID().slice(0, 8)}`,
+      consultation_fee: appt.consultation_fee,
+      platform_fee: appt.platform_fee,
+      total_amount: 0,
+      currency: "INR",
+      status: "paid",
+      payment_method: "clinic_reception",
+      paid_at: nowIso,
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    db.payments.push(pay);
+  } else {
+    pay.status = "paid";
+    pay.payment_method = "clinic_reception";
+    pay.total_amount = 0;
+    pay.paid_at = nowIso;
+    pay.updated_at = nowIso;
+  }
+
+  const enriched = enrichAppointment(db, appt);
+  db.notifications.unshift({
+    id: `notif-${crypto.randomUUID().slice(0, 8)}`,
+    user_id: appt.patient_id,
+    appointment_id: appt.id,
+    channel: "sms",
+    title: `Confirmed (Pay at Clinic) — ${appt.booking_code}`,
+    message: `Your appointment with ${enriched.doctor_name} at ${enriched.hospital_name} on ${appt.appointment_date} at ${formatTime12h(appt.slot_time)} is confirmed! Consultation fee of ?${appt.consultation_fee} payable directly at the clinic counter.`,
+    is_read: false,
+    sent_at: nowIso,
+  });
+
+  persistDb(db);
+  return { appointment: enriched, payment: pay };
 }
 
 // ============================================================================

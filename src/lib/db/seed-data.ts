@@ -15,7 +15,7 @@ import type {
   SpecialtyRecord,
 } from "@/types/database";
 
-export const CURRENT_STORE_VERSION = "prod_ponkunnam_kerala_v5";
+export const CURRENT_STORE_VERSION = "prod_ponkunnam_kerala_v6";
 export const DEFAULT_ADMIN_PHONE = "+918714858806";
 export const DEFAULT_ADMIN_PASSWORD_HASH =
   "b1f103690035a411cf86f694cf9f52de:14963003be551db7895edd8974b3e54b104ba5ac1f285977b33f6cce99982504780749d4830f2b3556a98d5998f31e7bd01a4c613966fc4942a9edccd89ea5f4";

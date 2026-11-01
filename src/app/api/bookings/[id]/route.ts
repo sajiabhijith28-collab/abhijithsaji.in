@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   cancelAppointmentWithRefund,
+  confirmPayAtClinic,
   getAppointmentById,
   reschedulePatientAppointment,
 } from "@/lib/db/store";
@@ -43,6 +44,18 @@ export async function PATCH(
         { error: parsed.error.issues[0]?.message || "Invalid action" },
         { status: 400 }
       );
+    }
+
+    if (parsed.data.action === "pay_at_clinic") {
+      const result = confirmPayAtClinic({
+        appointmentId: id,
+        actorUserId: user.id,
+      });
+      return NextResponse.json({
+        success: true,
+        appointment: result.appointment,
+        payment: result.payment,
+      });
     }
 
     if (parsed.data.action === "cancel") {

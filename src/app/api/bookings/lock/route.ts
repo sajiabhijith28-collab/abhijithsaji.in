@@ -97,6 +97,7 @@ export async function POST(request: Request) {
       patientPhone: parsed.data.patientPhone,
       symptomsNotes: parsed.data.symptomsNotes,
       razorpayOrderId: orderId,
+      payAtClinic: parsed.data.payAtClinic,
     });
 
     // When running in local Test Simulator mode (without live Razorpay keys),

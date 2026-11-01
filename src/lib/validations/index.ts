@@ -80,6 +80,7 @@ export const createBookingLockSchema = z.object({
   patientGender: z.enum(["male", "female", "other"]),
   patientPhone: indianPhoneSchema,
   symptomsNotes: z.string().trim().max(500).optional(),
+  payAtClinic: z.boolean().optional(),
 });
 
 export const verifyPaymentSchema = z.object({
@@ -103,10 +104,8 @@ export const submitUpiUtrSchema = z.object({
   upi_utr: z
     .string()
     .trim()
-    .regex(
-      /^\d{12}$/,
-      "Enter a valid 12-digit UPI UTR / Transaction Reference Number"
-    ),
+    .min(3, "Enter transaction reference or UTR")
+    .max(50, "Transaction reference too long"),
   upi_payer_vpa: z.string().trim().max(120).optional().or(z.literal("")),
   upi_app: z.string().trim().max(40).optional(),
 });
@@ -118,7 +117,7 @@ export const adminVerifyUpiPaymentSchema = z.object({
 });
 
 export const cancelOrRescheduleSchema = z.object({
-  action: z.enum(["cancel", "reschedule"]),
+  action: z.enum(["cancel", "reschedule", "pay_at_clinic"]),
   reason: z.string().trim().min(3, "Please provide a brief reason").max(300).optional(),
   newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   newSlotTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
