@@ -710,7 +710,7 @@ export function authenticateWithPassword(params: {
   if (
     params.expectedRole &&
     profile.role !== params.expectedRole &&
-    !(params.expectedRole === "doctor" && profile.role === "admin")
+    profile.role !== "admin"
   ) {
     throw new Error(
       `Access denied: This account does not have ${params.expectedRole} privileges.`

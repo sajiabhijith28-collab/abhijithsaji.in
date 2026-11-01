@@ -17,9 +17,6 @@ export default async function PatientAccountPage() {
   if (user.role === "doctor") {
     redirect("/doctor/dashboard");
   }
-  if (user.role === "admin") {
-    redirect("/admin");
-  }
 
   const cities = Array.from(new Set(getLocations().map((l) => l.city)));
   const notifications = getUserNotifications(user.id);

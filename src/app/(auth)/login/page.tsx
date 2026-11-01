@@ -573,10 +573,15 @@ function LoginFormContent() {
 
             {/* DOCTOR PORTAL LOGIN */}
             <TabsContent value="doctor" className="space-y-4 pt-3">
-              <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground">
-                Doctors sign in using the registered mobile number and password
-                issued by the My Dr Hospital Administrator.
-              </div>
+                <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                  <p>
+                    Doctors sign in using the registered mobile number and password
+                    issued by the My Dr Hospital Administrator.
+                  </p>
+                  <p className="pt-1 text-[11px]">
+                    To join as a medical specialist, please contact the Platform Administrator directly.
+                  </p>
+                </div>
               <form
                 onSubmit={(e) => handlePasswordLogin(e, "doctor")}
                 className="space-y-4"
