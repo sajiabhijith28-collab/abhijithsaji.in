@@ -7,10 +7,14 @@ import {
   CheckCircle2,
   Copy,
   Edit3,
+  Eye,
+  EyeOff,
   KeyRound,
   Loader2,
   Plus,
+  Power,
   Search,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -243,6 +247,63 @@ export function DoctorsManagerClient({
     }
   };
 
+  const [doctorToDelete, setDoctorToDelete] = useState<DoctorWithDetails | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleToggleStatus = async (doc: DoctorWithDetails) => {
+    setTogglingId(doc.id);
+    const newStatus = !doc.is_active;
+    try {
+      const res = await fetch("/api/admin/doctors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "toggle_status",
+          doctorId: doc.id,
+          is_active: newStatus,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Status update failed");
+
+      setDoctors((prev) =>
+        prev.map((d) => (d.id === doc.id ? data.doctor : d))
+      );
+      toast.success(
+        newStatus
+          ? `${doc.full_name} is now ACTIVE and visible on booking portal`
+          : `${doc.full_name} is DEACTIVATED and hidden from patients`
+      );
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to toggle status");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDeleteDoctor = async () => {
+    if (!doctorToDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/doctors?id=${doctorToDelete.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not delete doctor");
+
+      setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
+      toast.success(`${doctorToDelete.full_name} was permanently removed`);
+      setDoctorToDelete(null);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Deletion failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const filtered = doctors.filter((d) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
@@ -357,6 +418,35 @@ export function DoctorsManagerClient({
                   </td>
                   <td className="px-4 py-3.5 text-right">
                     <div className="inline-flex items-center gap-1.5">
+                      {/* 1-Click Activate / Deactivate Toggle Button */}
+                      <Button
+                        size="sm"
+                        variant={doc.is_active ? "ghost" : "outline"}
+                        className={
+                          doc.is_active
+                            ? "text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+                            : "text-emerald-600 border-emerald-500/40 hover:bg-emerald-500/10"
+                        }
+                        title={
+                          doc.is_active
+                            ? "Deactivate doctor (hide from patients)"
+                            : "Activate doctor (show on booking portal)"
+                        }
+                        disabled={togglingId === doc.id}
+                        onClick={() => handleToggleStatus(doc)}
+                      >
+                        {togglingId === doc.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : doc.is_active ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                        <span className="hidden sm:inline">
+                          {doc.is_active ? "Deactivate" : "Activate"}
+                        </span>
+                      </Button>
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -365,6 +455,7 @@ export function DoctorsManagerClient({
                         <Edit3 className="h-3.5 w-3.5" />
                         Edit
                       </Button>
+
                       <Button
                         size="sm"
                         variant="ghost"
@@ -373,6 +464,19 @@ export function DoctorsManagerClient({
                       >
                         <KeyRound className="h-3.5 w-3.5 text-primary" />
                       </Button>
+
+                      {/* Delete button (forbidden for primary admin owner doc) */}
+                      {doc.id !== "doc-admin-saji" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          title="Delete Doctor"
+                          onClick={() => setDoctorToDelete(doc)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -652,6 +756,54 @@ export function DoctorsManagerClient({
                   Copy Credentials
                 </Button>
                 <Button onClick={() => setIssuedCreds(null)}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <Dialog
+        open={Boolean(doctorToDelete)}
+        onOpenChange={(o) => !o && setDoctorToDelete(null)}
+      >
+        <DialogContent className="max-w-md">
+          {doctorToDelete && (
+            <>
+              <DialogHeader>
+                <Badge variant="destructive" className="w-fit">
+                  Permanent Removal
+                </Badge>
+                <DialogTitle className="pt-1">
+                  Delete {doctorToDelete.full_name}?
+                </DialogTitle>
+                <DialogDescription>
+                  This will remove the doctor&apos;s schedule, credentials, and profile from the platform. Patients will no longer be able to book appointments with this doctor.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs space-y-1.5">
+                <p className="font-semibold text-destructive">Caution:</p>
+                <p className="text-muted-foreground">
+                  If you only want to temporarily stop new bookings, you can use <strong>Deactivate</strong> instead of deleting.
+                </p>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setDoctorToDelete(null)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteDoctor}
+                  disabled={deleting}
+                >
+                  {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Confirm Delete Doctor
+                </Button>
               </DialogFooter>
             </>
           )}

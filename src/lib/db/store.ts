@@ -1761,6 +1761,60 @@ export function updateDoctorPhoto(doctorId: string, photoUrl: string): DoctorWit
   return enrichDoctor(db, doc)!;
 }
 
+export function adminToggleDoctorStatus(
+  doctorId: string,
+  isActive: boolean
+): DoctorWithDetails {
+  const db = loadDb();
+  const doc = db.doctors.find((d) => d.id === doctorId);
+  if (!doc) throw new Error("Doctor not found");
+  const nowIso = new Date().toISOString();
+  doc.is_active = isActive;
+  doc.updated_at = nowIso;
+  const profile = db.profiles.find((p) => p.id === doc.profile_id);
+  if (profile && profile.role !== "admin") {
+    profile.is_active = isActive;
+    profile.updated_at = nowIso;
+  }
+  persistDb(db);
+  return enrichDoctor(db, doc)!;
+}
+
+export function adminDeleteDoctor(doctorId: string): { success: boolean; id: string } {
+  const db = loadDb();
+  const docIdx = db.doctors.findIndex((d) => d.id === doctorId);
+  if (docIdx === -1) throw new Error("Doctor not found");
+  const doc = db.doctors[docIdx];
+
+  // Disallow deleting platform owner's seed doctor record to prevent lockout
+  if (doc.id === "doc-admin-saji" || doc.profile_id === "usr-admin-1") {
+    throw new Error(
+      "The primary platform owner doctor account cannot be deleted. You can edit its details or deactivate it instead."
+    );
+  }
+
+  // Remove doctor availability and leaves
+  db.doctor_availability = db.doctor_availability.filter(
+    (a) => a.doctor_id !== doctorId
+  );
+  db.doctor_leaves = db.doctor_leaves.filter(
+    (l) => l.doctor_id !== doctorId
+  );
+
+  // Remove linked profile if only associated with this doctor and not an admin
+  if (doc.profile_id) {
+    const prof = db.profiles.find((p) => p.id === doc.profile_id);
+    if (prof && prof.role !== "admin") {
+      db.profiles = db.profiles.filter((p) => p.id !== doc.profile_id);
+    }
+  }
+
+  // Remove doctor record
+  db.doctors.splice(docIdx, 1);
+  persistDb(db);
+  return { success: true, id: doctorId };
+}
+
 export function adminResetDoctorCredentials(doctorId: string): {
   phone: string;
   tempPassword: string;
