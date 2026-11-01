@@ -269,15 +269,21 @@ export function AppointmentsClient({
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           {appt.status === "pending_payment" && (
-            <Button size="sm" asChild>
-              <Link href={`/checkout?bookingId=${appt.id}`}>Complete Payment</Link>
+            <Button
+              size="sm"
+              className="bg-primary text-primary-foreground font-bold shadow-md hover:bg-primary/90 gap-1.5"
+              asChild
+            >
+              <Link href={`/checkout?bookingId=${appt.id}`}>
+                Pay ₹{appt.platform_fee} via UPI
+              </Link>
             </Button>
           )}
           {appt.status === "verification_pending" && (
             <>
               <Button size="sm" variant="secondary" asChild>
                 <Link href={`/checkout?bookingId=${appt.id}`}>
-                  Verification Status
+                  View UPI Status
                 </Link>
               </Button>
               <Button
