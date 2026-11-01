@@ -1214,6 +1214,49 @@ export function getPatientAppointments(
     );
 }
 
+export function syncClientBookings(
+  incoming: AppointmentWithDetails[]
+): number {
+  if (!Array.isArray(incoming) || incoming.length === 0) return 0;
+  const db = loadDb();
+  let count = 0;
+  for (const item of incoming) {
+    if (!item.id || !item.booking_code) continue;
+    const exists = db.appointments.find(
+      (a) => a.id === item.id || a.booking_code === item.booking_code
+    );
+    if (!exists) {
+      const {
+        payment,
+        doctor_name,
+        doctor_photo,
+        doctor_qualifications,
+        specialty_name,
+        hospital_name,
+        hospital_address,
+        city,
+        area,
+        ...record
+      } = item;
+      void doctor_name;
+      void doctor_photo;
+      void doctor_qualifications;
+      void specialty_name;
+      void hospital_name;
+      void hospital_address;
+      void city;
+      void area;
+      db.appointments.unshift(record as AppointmentRecord);
+      if (payment && !db.payments.find((p) => p.id === payment.id)) {
+        db.payments.unshift(payment);
+      }
+      count++;
+    }
+  }
+  if (count > 0) persistDb(db);
+  return count;
+}
+
 export function getUserNotifications(userId: string): NotificationRecord[] {
   const db = loadDb();
   return db.notifications

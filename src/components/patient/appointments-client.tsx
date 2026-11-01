@@ -50,6 +50,46 @@ export function AppointmentsClient({
 }) {
   const router = useRouter();
   const [appointments, setAppointments] = useState(initialAppointments);
+
+  // Sync with client-side local cache for instant resilience across serverless cold starts
+  React.useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("mydr_user_bookings");
+      if (raw) {
+        const stored = JSON.parse(raw) as AppointmentWithDetails[];
+        if (Array.isArray(stored) && stored.length > 0) {
+          setAppointments((prev) => {
+            const existingIds = new Set(prev.map((a) => a.id));
+            const missing = stored.filter((a) => !existingIds.has(a.id));
+            if (missing.length > 0) {
+              fetch("/api/bookings/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bookings: missing }),
+              }).catch(() => {});
+              return [...missing, ...prev];
+            }
+            return prev;
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (appointments.length > 0) {
+      try {
+        window.localStorage.setItem(
+          "mydr_user_bookings",
+          JSON.stringify(appointments)
+        );
+      } catch {
+        // ignore
+      }
+    }
+  }, [appointments]);
   const [receiptTarget, setReceiptTarget] =
     useState<AppointmentWithDetails | null>(null);
   const [cancelTarget, setCancelTarget] =

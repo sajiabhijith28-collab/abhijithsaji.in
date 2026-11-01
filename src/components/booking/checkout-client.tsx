@@ -113,6 +113,17 @@ export function CheckoutClient({
 
   useEffect(() => {
     setAppointment(initialAppointment);
+    try {
+      const raw = window.localStorage.getItem("mydr_user_bookings");
+      const list = raw ? (JSON.parse(raw) as AppointmentWithDetails[]) : [];
+      const updated = [
+        initialAppointment,
+        ...list.filter((a) => a.id !== initialAppointment.id),
+      ];
+      window.localStorage.setItem("mydr_user_bookings", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
   }, [initialAppointment]);
 
   useEffect(() => {
