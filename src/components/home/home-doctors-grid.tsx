@@ -73,3 +73,4 @@ export function HomeDoctorsGrid({ doctors }: { doctors: DoctorWithDetails[] }) {
     </Card>
   );
 }
+

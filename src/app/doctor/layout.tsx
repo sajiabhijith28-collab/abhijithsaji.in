@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DoctorShell } from "@/components/doctor/doctor-shell";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDoctorById, getDoctorByProfileId } from "@/lib/db/store";
+import { getDoctorByProfileId } from "@/lib/db/store";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +15,7 @@ export default async function DoctorPortalLayout({
     redirect("/login?tab=doctor");
   }
 
-  const doctor =
-    getDoctorByProfileId(user.id) ||
-    (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
+  const doctor = getDoctorByProfileId(user.id);
   if (!doctor) {
     if (user.role === "admin") {
       redirect("/admin");
