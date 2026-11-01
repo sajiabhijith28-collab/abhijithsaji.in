@@ -210,15 +210,12 @@ export function AccountClient({
       setPhoneCooldown(data.resendAfterSeconds || 30);
 
       if (data.liveSmsSent) {
-        toast.success(`6-digit OTP sent via SMS to ${data.maskedPhone}`);
+        toast.success(`6-digit OTP sent directly to ${data.maskedPhone} via SMS!`);
       } else if (data.fallbackSmsCode) {
-        toast.message(
-          `SMS • MYDRIN to +91 ${newPhone.replace(/\D/g, "").slice(-10)}`,
-          {
-            description: `Your My Dr mobile verification code is ${data.fallbackSmsCode}.`,
-            duration: 15000,
-          }
-        );
+        toast.message(`SMS Test Mode • ${data.maskedPhone}`, {
+          description: `Code: ${data.fallbackSmsCode}. Note: To deliver cellular SMS directly to your mobile phone SIM, connect Fast2SMS or 2Factor in Admin Settings.`,
+          duration: 15000,
+        });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send OTP");

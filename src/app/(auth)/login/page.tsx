@@ -96,10 +96,10 @@ function LoginFormContent() {
       setResendCooldown(data.resendAfterSeconds || 30);
 
       if (data.liveSmsSent) {
-        toast.success(`6-digit OTP sent via SMS to ${data.maskedPhone}`);
+        toast.success(`6-digit OTP sent directly to ${data.maskedPhone} via SMS!`);
       } else if (data.fallbackSmsCode) {
-        toast.message(`SMS • MYDRIN to +91 ${phone.replace(/\D/g, "").slice(-10)}`, {
-          description: `Your My Dr verification code is ${data.fallbackSmsCode}. Enter this 6-digit code to access your personal account.`,
+        toast.message(`SMS Test Mode • ${data.maskedPhone}`, {
+          description: `Code: ${data.fallbackSmsCode}. Note: To deliver cellular SMS directly to your mobile phone SIM, connect Fast2SMS or 2Factor in Admin Settings.`,
           duration: 15000,
         });
       }

@@ -45,9 +45,11 @@ export async function dispatchMobileOtp(params: {
   // 1. Fast2SMS (India Instant OTP Route)
   const fast2smsKey =
     process.env.FAST2SMS_API_KEY ||
-    (provider === "fast2sms" ? settings.sms_api_key : undefined);
+    (provider === "fast2sms" || settings.sms_provider === "fast2sms"
+      ? settings.sms_api_key
+      : undefined);
 
-  if (provider === "fast2sms" && fast2smsKey) {
+  if (fast2smsKey) {
     const url = new URL("https://www.fast2sms.com/dev/bulkV2");
     url.searchParams.set("variables_values", params.otp);
     url.searchParams.set("route", "otp");
@@ -81,9 +83,11 @@ export async function dispatchMobileOtp(params: {
   // 2. 2Factor.in (India Instant OTP Route)
   const twoFactorKey =
     process.env.TWOFACTOR_API_KEY ||
-    (provider === "twofactor" ? settings.sms_api_key : undefined);
+    (provider === "twofactor" || settings.sms_provider === "twofactor"
+      ? settings.sms_api_key
+      : undefined);
 
-  if (provider === "twofactor" && twoFactorKey) {
+  if (twoFactorKey) {
     const endpoint = `https://2factor.in/API/V1/${encodeURIComponent(
       twoFactorKey
     )}/SMS/${tenDigit}/${params.otp}/MYDR_OTP`;
@@ -108,11 +112,13 @@ export async function dispatchMobileOtp(params: {
   // 3. MSG91 India OTP API
   const msg91Key =
     process.env.MSG91_AUTH_KEY ||
-    (provider === "msg91" ? settings.sms_api_key : undefined);
+    (provider === "msg91" || settings.sms_provider === "msg91"
+      ? settings.sms_api_key
+      : undefined);
   const msg91Template =
     process.env.MSG91_TEMPLATE_ID || settings.sms_template_id;
 
-  if (provider === "msg91" && msg91Key) {
+  if (msg91Key) {
     const res = await fetch("https://control.msg91.com/api/v5/otp", {
       method: "POST",
       headers: {
@@ -144,7 +150,7 @@ export async function dispatchMobileOtp(params: {
   const twilioFrom =
     process.env.TWILIO_FROM_NUMBER || settings.twilio_from_number;
 
-  if (provider === "twilio" && twilioSid && twilioToken && twilioFrom) {
+  if (twilioSid && twilioToken && twilioFrom) {
     const auth = Buffer.from(`${twilioSid}:${twilioToken}`).toString("base64");
     const body = new URLSearchParams({
       To: params.phone,
