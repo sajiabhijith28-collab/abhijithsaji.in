@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import {
   adminDeleteDoctor,
   adminResetDoctorCredentials,
+  adminSyncDeletedDoctors,
   adminToggleDoctorStatus,
   adminUpsertDoctor,
 } from "@/lib/db/store";
@@ -16,6 +17,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+
+    // Replay of deletions so every serverless instance forgets deleted doctors
+    if (body.action === "sync_deleted") {
+      const ids = Array.isArray(body.ids) ? body.ids : [];
+      return NextResponse.json({
+        success: true,
+        ...adminSyncDeletedDoctors(ids),
+      });
+    }
 
     // Toggle active / deactivate action
     if (body.action === "toggle_status" && body.doctorId) {

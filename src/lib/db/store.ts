@@ -2086,10 +2086,67 @@ export function adminToggleDoctorStatus(
   return enrichDoctor(db, doc)!;
 }
 
+function purgeDoctorFromDb(db: LocalDatabaseSchema, doctorId: string): boolean {
+  const docIdx = db.doctors.findIndex((d) => d.id === doctorId);
+  if (docIdx === -1) return false;
+  const doc = db.doctors[docIdx];
+
+  db.doctor_availability = db.doctor_availability.filter(
+    (a) => a.doctor_id !== doctorId
+  );
+  db.doctor_leaves = db.doctor_leaves.filter((l) => l.doctor_id !== doctorId);
+
+  if (doc.profile_id) {
+    const prof = db.profiles.find((p) => p.id === doc.profile_id);
+    if (prof && prof.role !== "admin") {
+      db.profiles = db.profiles.filter((p) => p.id !== doc.profile_id);
+    }
+  }
+
+  db.doctors.splice(docIdx, 1);
+  return true;
+}
+
+/**
+ * Re-applies doctor deletions on this server instance. Serverless instances
+ * (Vercel) do not share memory, so the admin browser replays its deletions.
+ */
+export function adminSyncDeletedDoctors(ids: string[]): { removed: string[] } {
+  const db = loadDb();
+  const clean = Array.from(
+    new Set(ids.filter((id) => typeof id === "string" && id.length > 0))
+  );
+  const known = new Set(db.deleted_doctor_ids || []);
+  const removed: string[] = [];
+  let changed = false;
+  for (const id of clean) {
+    if (!known.has(id)) {
+      known.add(id);
+      changed = true;
+    }
+    if (purgeDoctorFromDb(db, id)) {
+      removed.push(id);
+      changed = true;
+    }
+  }
+  if (changed) {
+    db.deleted_doctor_ids = Array.from(known);
+    persistDb(db);
+  }
+  return { removed };
+}
+
 export function adminDeleteDoctor(doctorId: string): { success: boolean; id: string } {
   const db = loadDb();
   const docIdx = db.doctors.findIndex((d) => d.id === doctorId);
-  if (docIdx === -1) throw new Error("Doctor not found");
+  // Idempotent: on serverless the doctor may already be gone on this instance.
+  if (docIdx === -1) {
+    const known = new Set(db.deleted_doctor_ids || []);
+    known.add(doctorId);
+    db.deleted_doctor_ids = Array.from(known);
+    persistDb(db);
+    return { success: true, id: doctorId };
+  }
   const doc = db.doctors[docIdx];
 
   // Remove doctor availability and leaves
@@ -2108,8 +2165,11 @@ export function adminDeleteDoctor(doctorId: string): { success: boolean; id: str
     }
   }
 
-  // Remove doctor record
+  // Remove doctor record and leave a tombstone so patches never resurrect it
   db.doctors.splice(docIdx, 1);
+  db.deleted_doctor_ids = Array.from(
+    new Set([...(db.deleted_doctor_ids || []), doctorId])
+  );
   persistDb(db);
   return { success: true, id: doctorId };
 }

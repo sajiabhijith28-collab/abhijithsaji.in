@@ -93,6 +93,8 @@ export interface LocalDatabaseSchema {
   payments: PaymentRecord[];
   doctor_payouts: DoctorPayoutRecord[];
   notifications: NotificationRecord[];
+  /** Tombstones of doctors permanently deleted by admin (never re-created by seed patches). */
+  deleted_doctor_ids?: string[];
   otp_challenges: {
     phone: string;
     otp: string;

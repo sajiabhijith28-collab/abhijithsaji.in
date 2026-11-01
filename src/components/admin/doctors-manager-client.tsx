@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -42,6 +42,31 @@ import type {
 } from "@/types/database";
 import { formatDisplayPhone, formatINR } from "@/lib/utils";
 
+const DELETED_DOCTORS_KEY = "mydr_deleted_doctors";
+
+function readDeletedDoctors(): string[] {
+  try {
+    const raw = window.localStorage.getItem(DELETED_DOCTORS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberDeletedDoctor(id: string) {
+  try {
+    const ids = new Set(readDeletedDoctors());
+    ids.add(id);
+    window.localStorage.setItem(
+      DELETED_DOCTORS_KEY,
+      JSON.stringify(Array.from(ids))
+    );
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function DoctorsManagerClient({
   initialDoctors,
   hospitals,
@@ -57,6 +82,19 @@ export function DoctorsManagerClient({
 }) {
   const router = useRouter();
   const [doctors, setDoctors] = useState(initialDoctors);
+
+  // Serverless instances don't share memory: replay earlier deletions so a
+  // deleted doctor never reappears in the admin list or on the public site.
+  useEffect(() => {
+    const ids = readDeletedDoctors();
+    if (ids.length === 0) return;
+    setDoctors((prev) => prev.filter((d) => !ids.includes(d.id)));
+    fetch("/api/admin/doctors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "sync_deleted", ids }),
+    }).catch(() => {});
+  }, []);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -293,6 +331,7 @@ export function DoctorsManagerClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not delete doctor");
 
+      rememberDeletedDoctor(doctorToDelete.id);
       setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
       toast.success(`${doctorToDelete.full_name} was permanently removed`);
       setDoctorToDelete(null);
