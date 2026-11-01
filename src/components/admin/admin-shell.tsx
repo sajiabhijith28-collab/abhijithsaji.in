@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 
 const ADMIN_NAV = [
   { href: "/admin", label: "Analytics Overview", icon: BarChart3 },
+  { href: "/doctor/dashboard", label: "Doctor Portal", icon: Stethoscope },
   { href: "/admin/doctors", label: "Doctors & Credentials", icon: Stethoscope },
   { href: "/admin/hospitals", label: "Hospitals & Catalog", icon: Building2 },
   { href: "/admin/bookings", label: "Bookings & Patients", icon: CalendarRange },

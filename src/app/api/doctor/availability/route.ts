@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   addDoctorLeave,
+  getDoctorById,
   getDoctorByProfileId,
   removeDoctorLeave,
   saveDoctorAvailabilitySchedule,
@@ -14,10 +15,12 @@ import {
 export async function PUT(request: Request) {
   try {
     const user = await getCurrentUser();
-    if (!user || user.role !== "doctor") {
+    if (!user || (user.role !== "doctor" && user.role !== "admin")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const doctor = getDoctorByProfileId(user.id);
+    const doctor =
+      getDoctorByProfileId(user.id) ||
+      (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
     if (!doctor) {
       return NextResponse.json({ error: "Doctor record not found" }, { status: 404 });
     }
@@ -49,10 +52,12 @@ export async function PUT(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
-    if (!user || user.role !== "doctor") {
+    if (!user || (user.role !== "doctor" && user.role !== "admin")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const doctor = getDoctorByProfileId(user.id);
+    const doctor =
+      getDoctorByProfileId(user.id) ||
+      (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
     if (!doctor) {
       return NextResponse.json({ error: "Doctor record not found" }, { status: 404 });
     }
@@ -83,10 +88,12 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "doctor") {
+  if (!user || (user.role !== "doctor" && user.role !== "admin")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const doctor = getDoctorByProfileId(user.id);
+  const doctor =
+    getDoctorByProfileId(user.id) ||
+    (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
   if (!doctor) {
     return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
   }

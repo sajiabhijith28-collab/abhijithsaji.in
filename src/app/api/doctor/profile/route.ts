@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDoctorByProfileId, updateDoctorPhoto } from "@/lib/db/store";
+import { getDoctorById, getDoctorByProfileId, updateDoctorPhoto } from "@/lib/db/store";
 
 export async function PATCH(request: Request) {
   try {
     const user = await getCurrentUser();
-    if (!user || user.role !== "doctor") {
+    if (!user || (user.role !== "doctor" && user.role !== "admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const doctor = getDoctorByProfileId(user.id);
+    const doctor =
+      getDoctorByProfileId(user.id) ||
+      (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
     if (!doctor) {
       return NextResponse.json({ error: "Doctor profile not found" }, { status: 404 });
     }

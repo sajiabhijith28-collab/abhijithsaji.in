@@ -3,6 +3,7 @@ import { DoctorDashboardClient } from "@/components/doctor/dashboard-client";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   getDoctorAppointments,
+  getDoctorById,
   getDoctorByProfileId,
   getDoctorEarningsData,
 } from "@/lib/db/store";
@@ -11,8 +12,12 @@ export const dynamic = "force-dynamic";
 
 export default async function DoctorDashboardPage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "doctor") redirect("/login?tab=doctor");
-  const doctor = getDoctorByProfileId(user.id);
+  if (!user || (user.role !== "doctor" && user.role !== "admin")) {
+    redirect("/login?tab=doctor");
+  }
+  const doctor =
+    getDoctorByProfileId(user.id) ||
+    (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
   if (!doctor) redirect("/login?tab=doctor");
 
   const appointments = getDoctorAppointments(doctor.id);

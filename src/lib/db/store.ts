@@ -707,7 +707,11 @@ export function authenticateWithPassword(params: {
   if (!verifyPassword(params.password, profile.password_hash)) {
     throw new Error("Invalid mobile number or password.");
   }
-  if (params.expectedRole && profile.role !== params.expectedRole) {
+  if (
+    params.expectedRole &&
+    profile.role !== params.expectedRole &&
+    !(params.expectedRole === "doctor" && profile.role === "admin")
+  ) {
     throw new Error(
       `Access denied: This account does not have ${params.expectedRole} privileges.`
     );

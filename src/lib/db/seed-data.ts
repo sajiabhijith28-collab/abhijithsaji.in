@@ -15,7 +15,7 @@ import type {
   SpecialtyRecord,
 } from "@/types/database";
 
-export const CURRENT_STORE_VERSION = "prod_ponkunnam_kerala_v3";
+export const CURRENT_STORE_VERSION = "prod_ponkunnam_kerala_v4";
 export const DEFAULT_ADMIN_PHONE = "+918714858806";
 export const DEFAULT_ADMIN_PASSWORD_HASH =
   "b1f103690035a411cf86f694cf9f52de:14963003be551db7895edd8974b3e54b104ba5ac1f285977b33f6cce99982504780749d4830f2b3556a98d5998f31e7bd01a4c613966fc4942a9edccd89ea5f4";
@@ -257,6 +257,47 @@ export function buildInitialSeedDatabase(): LocalDatabaseSchema {
     updated_at: now,
   };
 
+  const doctors: DoctorRecord[] = [
+    {
+      id: "doc-admin-saji",
+      profile_id: "usr-admin-1",
+      hospital_id: "hosp-pkm-main",
+      specialty_id: "spec-gp",
+      location_id: "loc-pkm-town",
+      registration_number: "TCMC-686506",
+      qualifications: ["MBBS", "MD (General Medicine)"],
+      experience_years: 12,
+      languages: ["Malayalam", "English"],
+      bio: "Chief Medical Officer & Specialist Physician at Ponkunnam Medical Centre. Experienced in primary care, chronic illness management, diabetes, and preventive medicine for families across Ponkunnam.",
+      photo_url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80",
+      consultation_fee: 350,
+      platform_fee_override_type: null,
+      platform_fee_override_value: null,
+      rating: 4.9,
+      review_count: 32,
+      slot_duration_mins: 20,
+      is_featured: true,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+  ];
+
+  const doctor_availability: DoctorAvailabilityRecord[] = [];
+  for (let day = 0; day <= 6; day++) {
+    doctor_availability.push({
+      id: `avail-doc-admin-saji-${day}`,
+      doctor_id: "doc-admin-saji",
+      day_of_week: day,
+      is_working: day !== 0, // Mon-Sat working
+      morning_start: "09:00",
+      morning_end: "13:00",
+      evening_start: day === 0 ? null : "16:30",
+      evening_end: day === 0 ? null : "20:00",
+      slot_duration_mins: 20,
+    });
+  }
+
   return {
     store_version: CURRENT_STORE_VERSION,
     locations,
@@ -267,8 +308,8 @@ export function buildInitialSeedDatabase(): LocalDatabaseSchema {
       updated_at: now,
     })),
     profiles,
-    doctors: [],
-    doctor_availability: [],
+    doctors,
+    doctor_availability,
     doctor_leaves: [],
     platform_settings,
     appointments: [],

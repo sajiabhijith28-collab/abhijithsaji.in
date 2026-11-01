@@ -9,15 +9,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDoctorByProfileId, getDoctorEarningsData } from "@/lib/db/store";
+import {
+  getDoctorById,
+  getDoctorByProfileId,
+  getDoctorEarningsData,
+} from "@/lib/db/store";
 import { formatINR, formatReadableDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function DoctorEarningsPage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "doctor") redirect("/login?tab=doctor");
-  const doctor = getDoctorByProfileId(user.id);
+  if (!user || (user.role !== "doctor" && user.role !== "admin")) {
+    redirect("/login?tab=doctor");
+  }
+  const doctor =
+    getDoctorByProfileId(user.id) ||
+    (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
   if (!doctor) redirect("/login?tab=doctor");
 
   const earnings = getDoctorEarningsData(doctor.id);

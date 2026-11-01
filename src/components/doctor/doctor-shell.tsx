@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   Moon,
+  ShieldCheck,
   Sun,
   X,
 } from "lucide-react";
@@ -256,6 +257,19 @@ export function DoctorShell({
         </nav>
 
         <div className="p-4 border-t space-y-2">
+          {user.role === "admin" && (
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full justify-start bg-primary/90 text-primary-foreground font-semibold"
+              asChild
+            >
+              <Link href="/admin">
+                <ShieldCheck className="h-3.5 w-3.5 text-amber-300" />
+                Admin Console
+              </Link>
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="w-full justify-start" asChild>
             <Link href={`/doctors/${doctor.id}`} target="_blank">
               <ExternalLink className="h-3.5 w-3.5" />
@@ -315,6 +329,16 @@ export function DoctorShell({
 
         {mobileMenu && (
           <div className="lg:hidden border-b bg-card p-4 space-y-1 shadow-lg">
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenu(false)}
+                className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-bold bg-primary text-primary-foreground mb-2"
+              >
+                <ShieldCheck className="h-4 w-4 text-amber-300" />
+                Admin Console
+              </Link>
+            )}
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
