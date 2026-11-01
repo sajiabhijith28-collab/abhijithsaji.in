@@ -73,9 +73,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 2. Doctor portal routes
+  // 2. Doctor portal routes (accessible by doctor and admin)
   if (pathname.startsWith("/doctor")) {
-    if (!session || session.role !== "doctor") {
+    if (!session || (session.role !== "doctor" && session.role !== "admin")) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("tab", "doctor");
       loginUrl.searchParams.set("next", pathname);
