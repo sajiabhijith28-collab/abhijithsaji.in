@@ -45,6 +45,7 @@ import {
   CURRENT_STORE_VERSION,
   DEFAULT_ADMIN_PASSWORD_HASH,
   DEFAULT_ADMIN_PHONE,
+  DEFAULT_PONKUNNAM_HOSPITALS,
   type LocalDatabaseSchema,
 } from "./seed-data";
 
@@ -75,6 +76,17 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
   }
   if (!s.upi_verification_mode) {
     s.upi_verification_mode = "admin_approval";
+    patched = true;
+  }
+
+  // Ensure Ponkunnam clinics exist so doctors can always be onboarded smoothly
+  if (!db.hospitals || db.hospitals.length === 0) {
+    const nowIso = new Date().toISOString();
+    db.hospitals = DEFAULT_PONKUNNAM_HOSPITALS.map((h) => ({
+      ...h,
+      created_at: nowIso,
+      updated_at: nowIso,
+    }));
     patched = true;
   }
 
@@ -206,9 +218,12 @@ export function enrichDoctor(
   doc: DoctorRecord
 ): DoctorWithDetails | null {
   const profile = db.profiles.find((p) => p.id === doc.profile_id);
-  const specialty = db.specialties.find((s) => s.id === doc.specialty_id);
-  const hospital = db.hospitals.find((h) => h.id === doc.hospital_id);
-  const location = db.locations.find((l) => l.id === doc.location_id);
+  const specialty =
+    db.specialties.find((s) => s.id === doc.specialty_id) || db.specialties[0];
+  const hospital =
+    db.hospitals.find((h) => h.id === doc.hospital_id) || db.hospitals[0];
+  const location =
+    db.locations.find((l) => l.id === doc.location_id) || db.locations[0];
   if (!profile || !specialty || !hospital || !location) return null;
 
   // Compute next available slot preview across today + next 3 days
@@ -1526,13 +1541,14 @@ export function adminUpsertDoctor(input: {
   email?: string;
   photo_url?: string;
   specialty_id: string;
-  hospital_id: string;
+  hospital_id?: string;
+  new_hospital_name?: string;
   location_id: string;
   registration_number: string;
   qualifications: string[];
   experience_years: number;
   languages: string[];
-  bio: string;
+  bio?: string;
   consultation_fee: number;
   slot_duration_mins: number;
   platform_fee_override_type?: FeeType | null;
@@ -1546,6 +1562,45 @@ export function adminUpsertDoctor(input: {
   const db = loadDb();
   const nowIso = new Date().toISOString();
   const normalizedPhone = normalizeIndianPhone(input.phone);
+
+  // Resolve Hospital / Clinic (or create if specified)
+  let resolvedHospitalId = input.hospital_id;
+  if (
+    !resolvedHospitalId ||
+    resolvedHospitalId === "__new__" ||
+    resolvedHospitalId === "new" ||
+    !db.hospitals.some((h) => h.id === resolvedHospitalId)
+  ) {
+    if (input.new_hospital_name?.trim()) {
+      const created = adminUpsertHospital({
+        name: input.new_hospital_name.trim(),
+        location_id: input.location_id,
+        address: "Main Road, Ponkunnam, Kerala 686506",
+        phone: "+914828221000",
+        email: "desk@clinic.in",
+        rating: 4.8,
+        is_active: true,
+      });
+      resolvedHospitalId = created.id;
+    } else if (db.hospitals.length > 0) {
+      resolvedHospitalId = db.hospitals[0].id;
+    } else {
+      const created = adminUpsertHospital({
+        name: "Ponkunnam Medical Centre & Specialty Clinic",
+        location_id: input.location_id,
+        address: "Main Town, PP Road (NH 183), Ponkunnam, Kerala 686506",
+        phone: "+914828221000",
+        email: "care@ponkunnamclinic.in",
+        rating: 4.8,
+        is_active: true,
+      });
+      resolvedHospitalId = created.id;
+    }
+  }
+
+  const resolvedBio =
+    input.bio?.trim() ||
+    "Experienced clinical specialist in Ponkunnam dedicated to evidence-based patient care.";
 
   if (input.id) {
     const doc = db.doctors.find((d) => d.id === input.id);
@@ -1567,13 +1622,13 @@ export function adminUpsertDoctor(input: {
     profile.updated_at = nowIso;
 
     doc.specialty_id = input.specialty_id;
-    doc.hospital_id = input.hospital_id;
+    doc.hospital_id = resolvedHospitalId;
     doc.location_id = input.location_id;
     doc.registration_number = input.registration_number;
     doc.qualifications = input.qualifications;
     doc.experience_years = input.experience_years;
     doc.languages = input.languages;
-    doc.bio = input.bio;
+    doc.bio = resolvedBio;
     if (input.photo_url) doc.photo_url = input.photo_url;
     doc.consultation_fee = input.consultation_fee;
     doc.slot_duration_mins = input.slot_duration_mins;
@@ -1609,7 +1664,7 @@ export function adminUpsertDoctor(input: {
     phone: normalizedPhone,
     full_name: input.full_name,
     email: input.email || undefined,
-    city: loc?.city,
+    city: loc?.city || "Ponkunnam",
     area: loc?.area,
     password_hash: hashPassword(tempPassword),
     has_password: true,
@@ -1622,14 +1677,14 @@ export function adminUpsertDoctor(input: {
   const newDoc: DoctorRecord = {
     id: doctorId,
     profile_id: profileId,
-    hospital_id: input.hospital_id,
+    hospital_id: resolvedHospitalId,
     specialty_id: input.specialty_id,
     location_id: input.location_id,
     registration_number: input.registration_number,
     qualifications: input.qualifications,
     experience_years: input.experience_years,
     languages: input.languages,
-    bio: input.bio,
+    bio: resolvedBio,
     photo_url:
       input.photo_url ||
       "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",

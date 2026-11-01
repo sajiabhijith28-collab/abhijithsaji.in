@@ -48,3 +48,9 @@ INSERT INTO public.specialties (id, name, slug, icon_name, description) VALUES
   ('22222222-2222-4222-8222-222222222207', 'Neurology', 'neurology', 'Brain', 'Migraine, stroke, epilepsy & nerve disorders'),
   ('22222222-2222-4222-8222-222222222208', 'Dentistry', 'dentistry', 'Smile', 'Root canal, dental implants, aligners & oral care')
 ON CONFLICT (slug) DO NOTHING;
+
+-- Hospitals / Clinics (Ponkunnam, Kerala)
+INSERT INTO public.hospitals (id, name, slug, location_id, address, phone, email, rating, is_verified, is_active) VALUES
+  ('33333333-3333-4333-8333-333333333301', 'Ponkunnam Medical Centre & Specialty Clinic', 'ponkunnam-medical-centre', '11111111-1111-4111-8111-111111111101', 'Main Town, PP Road (NH 183), Ponkunnam, Kerala 686506', '+914828221000', 'care@ponkunnamclinic.in', 4.8, true, true),
+  ('33333333-3333-4333-8333-333333333302', 'Ponkunnam Community Care Clinic', 'ponkunnam-community-care', '11111111-1111-4111-8111-111111111103', 'Pala Road Junction, Ponkunnam, Kerala 686506', '+914828222000', 'info@ponkunnamcare.in', 4.7, true, true)
+ON CONFLICT (slug) DO NOTHING;

@@ -154,18 +154,19 @@ export const doctorLeaveSchema = z.object({
 
 export const adminUpsertDoctorSchema = z.object({
   id: z.string().optional(),
-  full_name: z.string().trim().min(3, "Doctor name is required"),
+  full_name: z.string().trim().min(2, "Doctor name is required"),
   phone: indianPhoneSchema,
   email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
   photo_url: z.string().trim().url("Enter a valid image URL").optional().or(z.literal("")),
   specialty_id: z.string().min(1, "Select a specialty"),
-  hospital_id: z.string().min(1, "Select a hospital"),
+  hospital_id: z.string().optional(),
+  new_hospital_name: z.string().trim().optional(),
   location_id: z.string().min(1, "Select a location"),
-  registration_number: z.string().trim().min(4, "Medical reg. number is required"),
+  registration_number: z.string().trim().min(2, "Medical reg. number is required"),
   qualifications: z.array(z.string().trim().min(1)).min(1, "Add at least one qualification"),
   experience_years: z.coerce.number().int().min(0).max(70),
   languages: z.array(z.string().trim().min(1)).min(1, "Add at least one language"),
-  bio: z.string().trim().min(10, "Bio must be at least 10 characters").max(1000),
+  bio: z.string().trim().optional().default("Experienced clinical specialist in Ponkunnam dedicated to patient care."),
   consultation_fee: z.coerce.number().min(0, "Consultation fee must be >= 0"),
   slot_duration_mins: z.coerce
     .number()

@@ -84,17 +84,16 @@ export default function AdminOverviewPage() {
                 Clean Production Workspace Ready — Start Adding Your Real Clinic Data
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                All demo records have been cleared. First add your{" "}
-                <strong>Hospital / Clinic</strong>, then onboard your{" "}
-                <strong>Doctors</strong> to go live for patient bookings.
+                Your workspace is ready. Click <strong>Add Doctors</strong> to
+                onboard specialists, assign Ponkunnam clinics, and issue login credentials.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 shrink-0">
               <Button size="sm" asChild>
-                <Link href="/admin/hospitals">1. Add Hospital / Clinic</Link>
+                <Link href="/admin/doctors">+ Add Doctor Now</Link>
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <Link href="/admin/doctors">2. Add Doctors</Link>
+                <Link href="/admin/hospitals">Manage Clinics &amp; Localities</Link>
               </Button>
             </div>
           </CardContent>

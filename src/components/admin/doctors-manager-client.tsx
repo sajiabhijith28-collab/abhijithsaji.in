@@ -70,7 +70,8 @@ export function DoctorsManagerClient({
   const [email, setEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [specialtyId, setSpecialtyId] = useState(specialties[0]?.id || "");
-  const [hospitalId, setHospitalId] = useState(hospitals[0]?.id || "");
+  const [hospitalId, setHospitalId] = useState(hospitals[0]?.id || "__new__");
+  const [newHospitalName, setNewHospitalName] = useState("");
   const [locationId, setLocationId] = useState(locations[0]?.id || "");
   const [regNo, setRegNo] = useState("");
   const [qualifications, setQualifications] = useState("MBBS, MD");
@@ -87,27 +88,21 @@ export function DoctorsManagerClient({
   const [isActive, setIsActive] = useState(true);
 
   const openCreateModal = () => {
-    if (hospitals.length === 0) {
-      toast.error(
-        "Please add at least one Hospital / Clinic in Ponkunnam first."
-      );
-      router.push("/admin/hospitals");
-      return;
-    }
     setEditId(undefined);
     setFullName("");
     setPhone("");
     setEmail("");
     setPhotoUrl("");
     setSpecialtyId(specialties[0]?.id || "");
-    setHospitalId(hospitals[0]?.id || "");
+    setHospitalId(hospitals[0]?.id || "__new__");
+    setNewHospitalName("");
     setLocationId(locations[0]?.id || "");
     setRegNo(`TCMC-KL-${Math.floor(10000 + Math.random() * 89999)}`);
     setQualifications("MBBS, MD");
     setExperienceYears("10");
     setLanguages("Malayalam, English");
     setBio(
-      "Experienced clinical specialist dedicated to evidence-based patient care."
+      "Experienced clinical specialist in Ponkunnam dedicated to evidence-based patient care."
     );
     setConsultationFee("800");
     setSlotDurationMins("20");
@@ -150,17 +145,27 @@ export function DoctorsManagerClient({
     e.preventDefault();
     setSaving(true);
     try {
+      const cleanPhone = phone.replace(/\D/g, "").slice(-10);
+      if (cleanPhone.length !== 10) {
+        throw new Error("Please enter a valid 10-digit mobile number");
+      }
+      if (hospitalId === "__new__" && !newHospitalName.trim()) {
+        throw new Error("Please enter the Clinic / Hospital Name");
+      }
+
       const res = await fetch("/api/admin/doctors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: editId,
           full_name: fullName,
-          phone,
+          phone: cleanPhone,
           email,
           photo_url: photoUrl,
           specialty_id: specialtyId,
-          hospital_id: hospitalId,
+          hospital_id: hospitalId === "__new__" ? undefined : hospitalId,
+          new_hospital_name:
+            hospitalId === "__new__" ? newHospitalName.trim() : undefined,
           location_id: locationId,
           registration_number: regNo,
           qualifications: qualifications
@@ -172,7 +177,9 @@ export function DoctorsManagerClient({
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
-          bio,
+          bio:
+            bio.trim() ||
+            "Experienced clinical specialist in Ponkunnam dedicated to evidence-based patient care.",
           consultation_fee: Number(consultationFee),
           slot_duration_mins: Number(slotDurationMins),
           platform_fee_override_type:
@@ -260,26 +267,6 @@ export function DoctorsManagerClient({
           Add New Doctor
         </Button>
       </div>
-
-      {hospitals.length === 0 && (
-        <Card className="border-amber-500/45 bg-amber-500/10">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="font-heading font-bold text-sm text-amber-950 dark:text-amber-200">
-                Step 1 Required: Add Your First Hospital / Clinic
-              </p>
-              <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
-                Before onboarding a doctor, add at least one Hospital or Clinic
-                in Hospitals &amp; Cities so you can assign the doctor&apos;s
-                practice location.
-              </p>
-            </div>
-            <Button size="sm" asChild>
-              <Link href="/admin/hospitals">+ Add Hospital / Clinic First</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Search */}
       <Card>
@@ -455,7 +442,17 @@ export function DoctorsManagerClient({
                       {h.name}
                     </option>
                   ))}
+                  <option value="__new__">+ Enter New Clinic / Practice Name</option>
                 </select>
+                {hospitalId === "__new__" && (
+                  <Input
+                    placeholder="e.g. Dr. Saji Family Clinic, Ponkunnam"
+                    value={newHospitalName}
+                    onChange={(e) => setNewHospitalName(e.target.value)}
+                    required
+                    className="mt-2"
+                  />
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>City &amp; Area</Label>

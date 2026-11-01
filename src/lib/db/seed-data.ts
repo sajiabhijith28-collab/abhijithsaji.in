@@ -20,6 +20,37 @@ export const DEFAULT_ADMIN_PHONE = "+918714858806";
 export const DEFAULT_ADMIN_PASSWORD_HASH =
   "b1f103690035a411cf86f694cf9f52de:14963003be551db7895edd8974b3e54b104ba5ac1f285977b33f6cce99982504780749d4830f2b3556a98d5998f31e7bd01a4c613966fc4942a9edccd89ea5f4";
 
+export const DEFAULT_PONKUNNAM_HOSPITALS: HospitalRecord[] = [
+  {
+    id: "hosp-pkm-main",
+    name: "Ponkunnam Medical Centre & Specialty Clinic",
+    slug: "ponkunnam-medical-centre",
+    location_id: "loc-pkm-town",
+    address: "Main Town, PP Road (NH 183), Ponkunnam, Kerala 686506",
+    phone: "+914828221000",
+    email: "care@ponkunnamclinic.in",
+    rating: 4.8,
+    is_verified: true,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "hosp-pkm-care",
+    name: "Ponkunnam Community Care Clinic",
+    slug: "ponkunnam-community-care",
+    location_id: "loc-pkm-palaroad",
+    address: "Pala Road Junction, Ponkunnam, Kerala 686506",
+    phone: "+914828222000",
+    email: "info@ponkunnamcare.in",
+    rating: 4.7,
+    is_verified: true,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
 export interface LocalDatabaseSchema {
   store_version?: string;
   locations: LocationRecord[];
@@ -231,7 +262,11 @@ export function buildInitialSeedDatabase(): LocalDatabaseSchema {
     store_version: CURRENT_STORE_VERSION,
     locations,
     specialties,
-    hospitals: [],
+    hospitals: DEFAULT_PONKUNNAM_HOSPITALS.map((h) => ({
+      ...h,
+      created_at: now,
+      updated_at: now,
+    })),
     profiles,
     doctors: [],
     doctor_availability: [],
