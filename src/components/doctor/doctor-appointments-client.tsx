@@ -42,7 +42,7 @@ export function DoctorAppointmentsClient({
 
   const updateStatus = async (
     id: string,
-    status: "completed" | "cancelled" | "no_show"
+    status: "confirmed" | "completed" | "cancelled" | "no_show"
   ) => {
     try {
       const res = await fetch("/api/doctor/appointments", {
@@ -173,7 +173,27 @@ export function DoctorAppointmentsClient({
                   </div>
                 </div>
 
-                {a.status === "confirmed" && (
+                {a.status === "verification_pending" ||
+                a.status === "pending_payment" ? (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                      onClick={() => updateStatus(a.id, "confirmed")}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Accept &amp; Confirm
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => updateStatus(a.id, "cancelled")}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : a.status === "confirmed" ? (
                   <div className="grid grid-cols-3 gap-2">
                     <Button
                       size="sm"
@@ -204,7 +224,7 @@ export function DoctorAppointmentsClient({
                       </Button>
                     </div>
                   </div>
-                )}
+                ) : null}
               </CardContent>
             </Card>
           ))
@@ -286,7 +306,28 @@ export function DoctorAppointmentsClient({
                       </Badge>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      {a.status === "confirmed" ? (
+                      {a.status === "verification_pending" ||
+                      a.status === "pending_payment" ? (
+                        <div className="inline-flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                            onClick={() => updateStatus(a.id, "confirmed")}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Accept &amp; Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:bg-destructive/10"
+                            title="Cancel Booking"
+                            onClick={() => updateStatus(a.id, "cancelled")}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : a.status === "confirmed" ? (
                         <div className="inline-flex items-center gap-1.5">
                           <Button
                             size="sm"

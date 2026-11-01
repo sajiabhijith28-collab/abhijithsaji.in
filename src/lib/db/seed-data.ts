@@ -250,7 +250,7 @@ export function buildInitialSeedDatabase(): LocalDatabaseSchema {
     payment_gateway_mode: "upi_direct",
     upi_id: process.env.ADMIN_UPI_ID || "pksaji020@oksbi",
     upi_payee_name: process.env.ADMIN_UPI_PAYEE_NAME || "My Dr Healthcare",
-    upi_verification_mode: "admin_approval",
+    upi_verification_mode: "instant_utr",
     sms_provider: "dev_console",
     support_phone: "+91-1800-108-6937",
     support_email: "care@mydr.in",

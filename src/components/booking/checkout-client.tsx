@@ -977,13 +977,12 @@ export function CheckoutClient({
                   ) : (
                     <ShieldCheck className="h-4 w-4" />
                   )}
-                  Submit Payment &amp; Hold My Slot
+                  Submit Payment &amp; Confirm Booking
                 </Button>
 
                 <p className="text-[11px] text-muted-foreground text-center">
-                  Once submitted, your slot is immediately locked and held as{" "}
-                  <strong>Payment Verification Pending</strong> until Admin
-                  approves your transfer.
+                  Once your 12-digit UTR is submitted, your booking is immediately
+                  confirmed and reserved on the doctor&apos;s schedule.
                 </p>
               </form>
             </>

@@ -75,7 +75,7 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
     patched = true;
   }
   if (!s.upi_verification_mode) {
-    s.upi_verification_mode = "admin_approval";
+    s.upi_verification_mode = "instant_utr";
     patched = true;
   }
 
@@ -871,8 +871,8 @@ export function createBookingLockAndOrder(params: {
   const feeBreakdown = calculateBookingFees(doc, db.platform_settings);
   const now = new Date();
   const nowIso = now.toISOString();
-  // 60 minutes payment window so patients have plenty of time to complete UPI payment
-  const lockExpiresIso = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+  // 24 hours payment window so patient bookings are preserved safely and not aggressively dropped
+  const lockExpiresIso = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
   const isZeroOnlineFee = feeBreakdown.onlinePayable <= 0;
 
@@ -1373,8 +1373,8 @@ export function getDoctorAppointments(doctorId: string): AppointmentWithDetails[
     .filter((a) => a.doctor_id === doctorId)
     .map((a) => enrichAppointment(db, a))
     .sort((a, b) =>
-      `${b.appointment_date} ${b.slot_time}`.localeCompare(
-        `${a.appointment_date} ${a.slot_time}`
+      `${a.appointment_date} ${a.slot_time}`.localeCompare(
+        `${b.appointment_date} ${b.slot_time}`
       )
     );
 }
@@ -1410,6 +1410,20 @@ export function updateAppointmentStatusByStaff(params: {
   appt.status = params.status;
   if (params.status === "completed") {
     appt.completed_at = nowIso;
+  }
+  if (params.status === "confirmed") {
+    appt.lock_expires_at = undefined;
+    appt.cancellation_reason = undefined;
+    appt.cancelled_at = undefined;
+    const pay = db.payments.find((p) => p.appointment_id === appt.id);
+    if (pay) {
+      pay.status = "paid";
+      pay.paid_at = pay.paid_at || nowIso;
+      pay.verified_by = params.actorUserId;
+      pay.verified_at = nowIso;
+      pay.rejection_reason = undefined;
+      pay.updated_at = nowIso;
+    }
   }
   appt.updated_at = nowIso;
   persistDb(db);

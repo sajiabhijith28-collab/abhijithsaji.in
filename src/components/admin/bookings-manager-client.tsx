@@ -48,7 +48,7 @@ export function BookingsManagerClient({
 
   const handleAdminStatus = async (
     id: string,
-    status: "completed" | "cancelled"
+    status: "confirmed" | "completed" | "cancelled"
   ) => {
     try {
       const res = await fetch("/api/doctor/appointments", {
@@ -60,6 +60,8 @@ export function BookingsManagerClient({
           reason:
             status === "cancelled"
               ? "Admin cancelled & issued 100% refund"
+              : status === "confirmed"
+              ? "Admin approved & confirmed booking"
               : undefined,
         }),
       });
@@ -69,7 +71,9 @@ export function BookingsManagerClient({
         prev.map((b) => (b.id === id ? data.appointment : b))
       );
       toast.success(
-        status === "cancelled"
+        status === "confirmed"
+          ? "Booking approved and confirmed!"
+          : status === "cancelled"
           ? "Booking cancelled & full refund triggered!"
           : "Marked completed"
       );
@@ -191,10 +195,26 @@ export function BookingsManagerClient({
                     </div>
                   </div>
 
-                  {b.status === "verification_pending" ? (
-                    <Button size="sm" className="w-full" asChild>
-                      <Link href="/admin/payments">Approve in Payments</Link>
-                    </Button>
+                  {b.status === "verification_pending" ||
+                  b.status === "pending_payment" ? (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1"
+                        onClick={() => handleAdminStatus(b.id, "confirmed")}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Approve Booking
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => handleAdminStatus(b.id, "cancelled")}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   ) : b.status === "confirmed" ? (
                     <div className="grid grid-cols-2 gap-2">
                       <Button
@@ -214,6 +234,16 @@ export function BookingsManagerClient({
                         Cancel &amp; Refund
                       </Button>
                     </div>
+                  ) : b.status === "cancelled" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-primary border-primary/40 hover:bg-primary/5 gap-1.5"
+                      onClick={() => handleAdminStatus(b.id, "confirmed")}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Restore &amp; Confirm Booking
+                    </Button>
                   ) : null}
                 </CardContent>
               </Card>
@@ -277,12 +307,31 @@ export function BookingsManagerClient({
                         </Badge>
                       </td>
                       <td className="px-4 py-3.5 text-right">
-                        {b.status === "verification_pending" ? (
-                          <Button size="sm" asChild>
-                            <Link href="/admin/payments">
-                              Approve in Payments
-                            </Link>
-                          </Button>
+                        {b.status === "verification_pending" ||
+                        b.status === "pending_payment" ? (
+                          <div className="inline-flex items-center gap-1.5">
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1"
+                              onClick={() =>
+                                handleAdminStatus(b.id, "confirmed")
+                              }
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:bg-destructive/10"
+                              title="Cancel & Refund"
+                              onClick={() =>
+                                handleAdminStatus(b.id, "cancelled")
+                              }
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         ) : b.status === "confirmed" ? (
                           <div className="inline-flex gap-1.5">
                             <Button
@@ -306,6 +355,18 @@ export function BookingsManagerClient({
                               Cancel &amp; Refund
                             </Button>
                           </div>
+                        ) : b.status === "cancelled" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs text-primary border-primary/40 hover:bg-primary/5 gap-1"
+                            onClick={() =>
+                              handleAdminStatus(b.id, "confirmed")
+                            }
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Restore
+                          </Button>
                         ) : b.payment?.status === "refunded" ? (
                           <span className="text-xs text-emerald-600 font-medium">
                             Refunded {formatINR(b.payment.refund_amount || 0)}
