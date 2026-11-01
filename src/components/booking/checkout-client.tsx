@@ -813,7 +813,7 @@ export function CheckoutClient({
               <span className="text-muted-foreground flex items-center gap-1.5">
                 Consultation Fee
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  Pay at Clinic
+                  Doctor Fee
                 </Badge>
               </span>
               <span className="font-medium tabular-nums">
@@ -822,11 +822,7 @@ export function CheckoutClient({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">
-                Platform Booking Fee (
-                {appointment.applied_fee_type === "percentage"
-                  ? `${appointment.applied_fee_rate}%`
-                  : "Flat"}
-                )
+                Platform Booking Fee (10% of Consultation Fee)
               </span>
               <span className="font-semibold text-primary tabular-nums">
                 {formatINR(appointment.platform_fee, true)}
@@ -834,7 +830,7 @@ export function CheckoutClient({
             </div>
             <div className="border-t pt-2.5 flex justify-between items-baseline">
               <span className="font-heading font-bold text-base">
-                Pay Online Now
+                Pay Online Now (10%)
               </span>
               <span className="font-heading font-extrabold text-2xl text-primary tabular-nums">
                 {formatINR(appointment.platform_fee, true)}
@@ -850,58 +846,22 @@ export function CheckoutClient({
         </CardContent>
       </Card>
 
-      {/* Right: Payment Options (Pay at Clinic Reception vs Direct UPI) */}
+      {/* Right: Payment Options (10% Online via UPI vs Pay at Clinic) */}
       <div className="lg:col-span-6 space-y-6">
-        {/* OPTION 1: Pay at Clinic Reception Banner */}
-        <div className="rounded-2xl border-2 border-emerald-600/40 bg-emerald-500/[0.08] p-5 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <Badge className="bg-emerald-600 text-white font-bold text-xs">
-              OPTION 1 — PAY AT CLINIC RECEPTION
-            </Badge>
-            <span className="font-heading font-extrabold text-emerald-600 text-base">
-              ₹0 Online
-            </span>
-          </div>
-          <div>
-            <h3 className="font-heading font-bold text-base text-foreground">
-              Prefer to pay directly at the clinic?
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              Skip online UPI entirely. Lock this slot for ₹0 online advance now and pay the consultation fee of{" "}
-              <strong className="text-foreground">{formatINR(appointment.consultation_fee, true)}</strong>{" "}
-              at the clinic reception counter.
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="lg"
-            onClick={handleSwitchToPayAtClinic}
-            disabled={processing}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md text-sm py-5"
-          >
-            {processing ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Building2 className="h-4 w-4 mr-2" />
-            )}
-            Confirm Booking (Pay at Clinic Reception — ₹0 Online)
-          </Button>
-        </div>
-
-        {/* OPTION 2: Direct UPI Payment Card */}
+        {/* PRIMARY OPTION: Direct UPI Payment Card (10% on Consultation Fee) */}
         <Card className="border-primary/25 shadow-xl">
           <CardHeader className="border-b bg-primary/[0.04]">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Smartphone className="h-5 w-5 text-primary" />
-                OPTION 2 — Pay Platform Fee via UPI
+                Pay 10% Booking Fee via UPI
               </CardTitle>
               <Badge variant="default" className="font-mono text-xs">
-                {formatINR(appointment.platform_fee, true)}
+                10% = {formatINR(appointment.platform_fee, true)}
               </Badge>
             </div>
             <CardDescription>
-              Scan the QR code with Google Pay, PhonePe, Paytm, or BHIM, or tap an app below.
+              Online payment is 10% on consultation fee ({formatINR(appointment.platform_fee, true)} on {formatINR(appointment.consultation_fee, true)}). Scan the QR code with Google Pay, PhonePe, Paytm, or BHIM.
             </CardDescription>
           </CardHeader>
 
@@ -912,7 +872,7 @@ export function CheckoutClient({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-heading font-bold uppercase tracking-wider text-muted-foreground">
-                      Step 1 — Scan QR Code or Pay via UPI
+                      Step 1 — Scan QR Code or Open UPI App
                     </span>
                     <button
                       type="button"
@@ -936,7 +896,7 @@ export function CheckoutClient({
                         Scan with GPay, PhonePe, Paytm or BHIM
                       </span>
                       <Badge variant="outline" className="text-[10px] font-bold border-primary text-primary">
-                        Exact Amount: {formatINR(appointment.platform_fee, true)}
+                        10% Amount: {formatINR(appointment.platform_fee, true)}
                       </Badge>
                     </div>
 
@@ -962,19 +922,19 @@ export function CheckoutClient({
                               title="Copy UPI ID"
                             >
                               {copiedUpi ? (
-                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                <Check className="h-4 w-4 text-emerald-600" />
                               ) : (
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-4 w-4" />
                               )}
                             </button>
                           </div>
                         </div>
                         <p className="text-muted-foreground text-[11px] leading-relaxed">
-                          Scan with your phone to pay the platform booking fee of{" "}
+                          Scan to pay the 10% booking fee of{" "}
                           <strong className="text-foreground">
                             {formatINR(appointment.platform_fee, true)}
                           </strong>
-                          . Once sent, click below to confirm:
+                          . Once sent, tap below to confirm immediately:
                         </p>
                         <Button
                           type="button"
@@ -988,7 +948,7 @@ export function CheckoutClient({
                           ) : (
                             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
                           )}
-                          I Have Sent ₹35 via UPI (Confirm Now)
+                          I Have Paid 10% ({formatINR(appointment.platform_fee, true)}) via UPI
                         </Button>
                       </div>
                     </div>
@@ -1015,7 +975,7 @@ export function CheckoutClient({
                             <div>
                               <div className="font-heading font-bold text-xs">{opt.label}</div>
                               <div className="text-[10px] text-muted-foreground">
-                                {formatINR(appointment.platform_fee, true)}
+                                10% Fee: {formatINR(appointment.platform_fee, true)}
                               </div>
                             </div>
                             <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1082,7 +1042,7 @@ export function CheckoutClient({
                     ) : (
                       <ShieldCheck className="h-4 w-4 mr-2" />
                     )}
-                    Confirm UPI Payment &amp; Finalize Booking
+                    Confirm 10% UPI Payment &amp; Finalize Booking
                   </Button>
 
                   <p className="text-[11px] text-muted-foreground text-center">
@@ -1103,7 +1063,7 @@ export function CheckoutClient({
                   ) : (
                     <Lock className="h-4 w-4 mr-2" />
                   )}
-                  Pay {formatINR(appointment.platform_fee, true)} Online to Confirm
+                  Pay 10% ({formatINR(appointment.platform_fee, true)}) to Confirm
                 </Button>
 
                 <div className="space-y-2 text-[11px] text-muted-foreground text-center">
@@ -1117,6 +1077,35 @@ export function CheckoutClient({
             )}
           </CardContent>
         </Card>
+
+        {/* ALTERNATIVE OPTION: Pay at Clinic Reception */}
+        <div className="rounded-2xl border-2 border-emerald-600/30 bg-emerald-500/[0.06] p-4 space-y-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              Alternative Option:
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">
+              Pay at Clinic
+            </span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              Prefer to pay the entire consultation fee of{" "}
+              <strong className="text-foreground">{formatINR(appointment.consultation_fee, true)}</strong> directly at the clinic counter?
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleSwitchToPayAtClinic}
+              disabled={processing}
+              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950 shrink-0 font-semibold"
+            >
+              {processing && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+              Pay at Clinic Instead
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Optional Razorpay Test Simulator Modal (only used when gateway mode = razorpay without live keys) */}

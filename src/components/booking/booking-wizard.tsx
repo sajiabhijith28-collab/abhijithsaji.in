@@ -92,7 +92,7 @@ export function BookingWizard({
     currentUser?.phone ? currentUser.phone.replace(/^\+91/, "") : ""
   );
   const [symptomsNotes, setSymptomsNotes] = useState("");
-  const [paymentOption, setPaymentOption] = useState<"clinic" | "upi">("clinic");
+  const [paymentOption, setPaymentOption] = useState<"clinic" | "upi">("upi");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -439,70 +439,25 @@ export function BookingWizard({
           </CardContent>
         </Card>
 
-        {/* Step 3: Choose Payment Option (Pay at Clinic vs Online UPI) */}
+        {/* Step 3: Choose Payment Option (10% on Consultation Fee via UPI) */}
         <Card className="border-2 border-primary/25 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <Badge variant="default">Step 3 of 3</Badge>
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                Payment Options Available
+              <span className="text-xs font-semibold text-primary">
+                Online Payment: 10% on Consultation Fee
               </span>
             </div>
             <CardTitle className="text-xl pt-1">
-              Choose Payment Option
+              Confirm Payment Option
             </CardTitle>
             <CardDescription>
-              Select how you would like to complete your appointment booking
+              Online booking fee is exactly 10% of the doctor&apos;s consultation fee ({formatINR(feeBreakdown.platformFee, true)} on {formatINR(feeBreakdown.consultationFee, true)}).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* Option 1: Pay at Clinic Reception */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setPaymentOption("clinic")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setPaymentOption("clinic");
-                }}
-                className={`relative cursor-pointer rounded-2xl border-2 p-4 sm:p-5 transition-all text-left ${
-                  paymentOption === "clinic"
-                    ? "border-emerald-600 bg-emerald-500/[0.08] ring-2 ring-emerald-500/20 shadow-sm"
-                    : "border-border hover:border-emerald-500/40 bg-background"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1.5">
-                    <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
-                      RECOMMENDED • ₹0 ONLINE NOW
-                    </Badge>
-                    <div className="font-heading font-bold text-base text-foreground flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      Pay at Clinic Reception
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Zero online payment now. Immediate confirmation token. Pay the total fee of{" "}
-                      <strong className="text-foreground">
-                        {formatINR(feeBreakdown.consultationFee, true)}
-                      </strong>{" "}
-                      directly at the clinic counter.
-                    </p>
-                  </div>
-                  <div
-                    className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
-                      paymentOption === "clinic"
-                        ? "border-emerald-600 bg-emerald-600 text-white"
-                        : "border-muted-foreground/40"
-                    }`}
-                  >
-                    {paymentOption === "clinic" && (
-                      <Check className="h-3 w-3 stroke-[3]" />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Option 2: Pay Platform Fee via UPI */}
+              {/* Option 1: Pay 10% on Consultation Fee via UPI (Recommended) */}
               <div
                 role="button"
                 tabIndex={0}
@@ -518,20 +473,20 @@ export function BookingWizard({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1.5">
-                    <Badge variant="outline" className="border-primary text-primary font-bold text-[10px]">
-                      DIRECT UPI • {formatINR(feeBreakdown.platformFee, true)} ONLINE
+                    <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">
+                      RECOMMENDED • 10% ON CONSULTATION FEE
                     </Badge>
                     <div className="font-heading font-bold text-base text-foreground flex items-center gap-2">
                       <Smartphone className="h-4 w-4 text-primary shrink-0" />
-                      Pay Platform Fee via UPI
+                      Pay 10% Booking Fee via UPI
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Pay{" "}
+                      Pay 10% of consultation fee (
                       <strong className="text-foreground">
                         {formatINR(feeBreakdown.platformFee, true)}
-                      </strong>{" "}
-                      platform fee online via UPI (GPay/PhonePe/Paytm/QR). Pay balance{" "}
-                      <strong>{formatINR(feeBreakdown.consultationFee, true)}</strong> at clinic.
+                      </strong>
+                      ) online via UPI (GPay/PhonePe/Paytm/QR) for instant slot reservation. Pay consultation fee of{" "}
+                      <strong>{formatINR(feeBreakdown.consultationFee, true)}</strong> directly at the clinic.
                     </p>
                   </div>
                   <div
@@ -542,6 +497,51 @@ export function BookingWizard({
                     }`}
                   >
                     {paymentOption === "upi" && (
+                      <Check className="h-3 w-3 stroke-[3]" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Option 2: Pay Full Fee at Clinic Reception */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setPaymentOption("clinic")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setPaymentOption("clinic");
+                }}
+                className={`relative cursor-pointer rounded-2xl border-2 p-4 sm:p-5 transition-all text-left ${
+                  paymentOption === "clinic"
+                    ? "border-emerald-600 bg-emerald-500/[0.08] ring-2 ring-emerald-500/20 shadow-sm"
+                    : "border-border hover:border-emerald-500/40 bg-background"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1.5">
+                    <Badge variant="outline" className="border-emerald-600 text-emerald-600 font-bold text-[10px]">
+                      ALTERNATIVE • PAY AT CLINIC COUNTER
+                    </Badge>
+                    <div className="font-heading font-bold text-base text-foreground flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      Pay at Clinic Reception
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Skip online UPI advance. Pay the entire consultation fee of{" "}
+                      <strong className="text-foreground">
+                        {formatINR(feeBreakdown.consultationFee, true)}
+                      </strong>{" "}
+                      directly at the hospital reception counter during your consultation.
+                    </p>
+                  </div>
+                  <div
+                    className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
+                      paymentOption === "clinic"
+                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {paymentOption === "clinic" && (
                       <Check className="h-3 w-3 stroke-[3]" />
                     )}
                   </div>
@@ -593,11 +593,11 @@ export function BookingWizard({
                 </span>
               </div>
               <div className="flex justify-between pt-1 border-t border-border/50">
-                <span className="text-muted-foreground">Selected Payment</span>
+                <span className="text-muted-foreground">Payment Method</span>
                 <span className="font-semibold text-foreground">
-                  {paymentOption === "clinic"
-                    ? "Pay at Clinic Reception"
-                    : "Pay Platform Fee via UPI"}
+                  {paymentOption === "upi"
+                    ? "10% Online via UPI"
+                    : "Pay at Clinic Reception"}
                 </span>
               </div>
             </div>
@@ -608,7 +608,7 @@ export function BookingWizard({
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   Consultation Fee
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    Pay at Clinic
+                    Doctor Fee
                   </Badge>
                 </span>
                 <span className="font-medium tabular-nums">
@@ -617,35 +617,35 @@ export function BookingWizard({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">
-                  Platform Booking Fee
+                  Online Booking Fee (10%)
                 </span>
                 <span className="font-semibold text-primary tabular-nums">
-                  {paymentOption === "clinic" ? (
-                    <span className="text-emerald-600 font-bold">₹0.00 (Pay at Clinic)</span>
-                  ) : (
+                  {paymentOption === "upi" ? (
                     formatINR(feeBreakdown.platformFee, true)
+                  ) : (
+                    <span className="text-emerald-600 font-bold">₹0.00 (Pay at Clinic)</span>
                   )}
                 </span>
               </div>
               <div
                 className={`rounded-xl border p-3.5 space-y-1.5 mt-2 transition-all ${
-                  paymentOption === "clinic"
-                    ? "border-emerald-600/30 bg-emerald-500/[0.06]"
-                    : "border-primary/20 bg-primary/[0.04]"
+                  paymentOption === "upi"
+                    ? "border-primary/20 bg-primary/[0.04]"
+                    : "border-emerald-600/30 bg-emerald-500/[0.06]"
                 }`}
               >
                 <div className="flex justify-between font-heading font-bold text-base">
-                  <span>Pay Online Now</span>
+                  <span>Pay Online Now (10%)</span>
                   <span
                     className={`tabular-nums ${
-                      paymentOption === "clinic"
-                        ? "text-emerald-600"
-                        : "text-primary"
+                      paymentOption === "upi"
+                        ? "text-primary"
+                        : "text-emerald-600"
                     }`}
                   >
-                    {paymentOption === "clinic"
-                      ? "₹0.00 (Free Booking)"
-                      : formatINR(feeBreakdown.onlinePayable, true)}
+                    {paymentOption === "upi"
+                      ? formatINR(feeBreakdown.onlinePayable, true)
+                      : "₹0.00 (Pay at Clinic)"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
@@ -658,7 +658,22 @@ export function BookingWizard({
             </div>
 
             {/* Dynamic Action Buttons */}
-            {paymentOption === "clinic" ? (
+            {paymentOption === "upi" ? (
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full font-bold shadow-md text-sm py-6"
+                disabled={submitting || !selectedSlot}
+              >
+                {submitting ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <Lock className="h-5 w-5 mr-2" />
+                )}
+                Pay 10% ({formatINR(feeBreakdown.onlinePayable, true)}) via UPI to Book
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Button>
+            ) : (
               <Button
                 type="submit"
                 size="lg"
@@ -671,21 +686,6 @@ export function BookingWizard({
                   <Building2 className="h-5 w-5 mr-2" />
                 )}
                 Confirm Booking (Pay at Clinic — ₹0 Online)
-                <ArrowRight className="h-4 w-4 ml-1.5" />
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full font-bold shadow-md text-sm py-6"
-                disabled={submitting || !selectedSlot}
-              >
-                {submitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                ) : (
-                  <Lock className="h-5 w-5 mr-2" />
-                )}
-                Pay {formatINR(feeBreakdown.onlinePayable, true)} via UPI to Book
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             )}
