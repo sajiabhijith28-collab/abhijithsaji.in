@@ -587,23 +587,63 @@ export function CheckoutClient({
   // STATE 3: CANCELLED OR EXPIRED BOOKING
   // =========================================================================
   if (appointment.status === "cancelled") {
+    // If the patient is trying to pay for this appointment, let them renew/retry the payment directly
+    const handleReactivateSlot = async () => {
+      setProcessing(true);
+      try {
+        const res = await fetch("/api/bookings/lock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            doctorId: appointment.doctor_id,
+            appointmentDate: appointment.appointment_date,
+            slotTime: appointment.slot_time,
+            patientName: appointment.patient_name,
+            patientAge: appointment.patient_age,
+            patientGender: appointment.patient_gender,
+            patientPhone: appointment.patient_phone,
+            symptomsNotes: appointment.symptoms_notes,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not reserve slot");
+        toast.success("Slot reactivated! You can now complete your UPI payment.");
+        router.push(`/checkout?bookingId=${data.appointment.id}`);
+        router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Slot renewal failed");
+      } finally {
+        setProcessing(false);
+      }
+    };
+
     return (
       <div className="max-w-md mx-auto space-y-4">
-        <Card className="border-destructive/30 shadow-lg text-center p-6 space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <Card className="border-primary/30 shadow-lg text-center p-6 space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Clock className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="font-heading text-xl font-bold">Booking Window Expired</h1>
+            <h1 className="font-heading text-xl font-bold">Booking Payment Expired</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {appointment.cancellation_reason || "The 10-minute temporary payment lock on this slot expired. Please choose an open slot to complete your appointment."}
+              Your previous payment window timed out. Click below to re-open the payment options for this slot.
             </p>
           </div>
-          <Button asChild className="w-full">
-            <Link href={`/book/${appointment.doctor_id}`}>
-              Pick a New Slot
-            </Link>
-          </Button>
+          <div className="space-y-2 pt-2">
+            <Button
+              className="w-full font-bold"
+              onClick={handleReactivateSlot}
+              disabled={processing}
+            >
+              {processing && <Loader2 className="h-4 w-4 animate-spin" />}
+              Re-activate Slot &amp; Show Payment Options
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/book/${appointment.doctor_id}`}>
+                Pick a Different Time Slot
+              </Link>
+            </Button>
+          </div>
         </Card>
       </div>
     );

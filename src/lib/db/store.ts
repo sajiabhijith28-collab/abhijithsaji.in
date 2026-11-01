@@ -871,7 +871,8 @@ export function createBookingLockAndOrder(params: {
   const feeBreakdown = calculateBookingFees(doc, db.platform_settings);
   const now = new Date();
   const nowIso = now.toISOString();
-  const lockExpiresIso = new Date(now.getTime() + 10 * 60 * 1000).toISOString();
+  // 60 minutes payment window so patients have plenty of time to complete UPI payment
+  const lockExpiresIso = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
 
   const isZeroOnlineFee = feeBreakdown.onlinePayable <= 0;
 
