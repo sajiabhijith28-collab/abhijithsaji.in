@@ -1947,13 +1947,6 @@ export function adminDeleteDoctor(doctorId: string): { success: boolean; id: str
   if (docIdx === -1) throw new Error("Doctor not found");
   const doc = db.doctors[docIdx];
 
-  // Disallow deleting platform owner's seed doctor record to prevent lockout
-  if (doc.id === "doc-admin-saji" || doc.profile_id === "usr-admin-1") {
-    throw new Error(
-      "The primary platform owner doctor account cannot be deleted. You can edit its details or deactivate it instead."
-    );
-  }
-
   // Remove doctor availability and leaves
   db.doctor_availability = db.doctor_availability.filter(
     (a) => a.doctor_id !== doctorId

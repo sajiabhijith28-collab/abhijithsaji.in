@@ -345,8 +345,120 @@ export function DoctorsManagerClient({
         </CardContent>
       </Card>
 
-      {/* Doctors Table */}
-      <Card className="overflow-hidden">
+      {/* Mobile Doctors List (Cards) */}
+      <div className="md:hidden space-y-4">
+        {filtered.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              No doctors found matching your search.
+            </CardContent>
+          </Card>
+        ) : (
+          filtered.map((doc) => (
+            <Card key={`mob-${doc.id}`} className="overflow-hidden">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <img
+                    src={doc.photo_url}
+                    alt={doc.full_name}
+                    className="h-14 w-14 rounded-xl object-cover border shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-heading font-bold text-base truncate">
+                        {doc.full_name}
+                      </h3>
+                      <Badge variant={doc.is_active ? "success" : "destructive"} className="shrink-0 text-[11px]">
+                        {doc.is_active ? "Active" : "Deactivated"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-primary font-medium">
+                      {doc.specialty.name} • {doc.experience_years}y exp
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {doc.hospital.name} ({doc.location.city})
+                    </p>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                      {formatDisplayPhone(doc.phone)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 text-xs">
+                  <div>
+                    <span className="text-muted-foreground block text-[11px]">Consultation Fee</span>
+                    <span className="font-heading font-bold text-sm tabular-nums">{formatINR(doc.consultation_fee)}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-muted-foreground block text-[11px]">Platform Fee</span>
+                    <span className="font-semibold text-primary">
+                      {doc.platform_fee_override_type
+                        ? `${doc.platform_fee_override_type === "percentage" ? `${doc.platform_fee_override_value}%` : formatINR(doc.platform_fee_override_value || 0)}`
+                        : `Global (${settings.platform_fee_type === "percentage" ? `${settings.platform_fee_value}%` : formatINR(settings.platform_fee_value)})`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t">
+                  <Button
+                    size="sm"
+                    variant={doc.is_active ? "ghost" : "outline"}
+                    className={
+                      doc.is_active
+                        ? "text-amber-600 hover:bg-amber-500/10 text-xs"
+                        : "text-emerald-600 border-emerald-500/40 hover:bg-emerald-500/10 text-xs"
+                    }
+                    disabled={togglingId === doc.id}
+                    onClick={() => handleToggleStatus(doc)}
+                  >
+                    {togglingId === doc.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                    ) : doc.is_active ? (
+                      <EyeOff className="h-3.5 w-3.5 mr-1" />
+                    ) : (
+                      <Eye className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    {doc.is_active ? "Deactivate" : "Activate"}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => openEditModal(doc)}
+                  >
+                    <Edit3 className="h-3.5 w-3.5 mr-1" />
+                    Edit
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => handleResetCredentials(doc)}
+                  >
+                    <KeyRound className="h-3.5 w-3.5 mr-1 text-primary" />
+                    Reset Pass
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive font-medium"
+                    onClick={() => setDoctorToDelete(doc)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Delete Doctor
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Doctors Table */}
+      <Card className="hidden md:block overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left text-xs uppercase text-muted-foreground">
@@ -465,18 +577,17 @@ export function DoctorsManagerClient({
                         <KeyRound className="h-3.5 w-3.5 text-primary" />
                       </Button>
 
-                      {/* Delete button (forbidden for primary admin owner doc) */}
-                      {doc.id !== "doc-admin-saji" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:bg-destructive/10"
-                          title="Delete Doctor"
-                          onClick={() => setDoctorToDelete(doc)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
+                      {/* Delete Doctor from Site button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive gap-1 font-medium"
+                        title="Delete Doctor permanently from site"
+                        onClick={() => setDoctorToDelete(doc)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete</span>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -690,18 +801,39 @@ export function DoctorsManagerClient({
               </label>
             </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editId ? "Save Changes" : "Create Doctor & Generate Login"}
-              </Button>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t">
+              {editId ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="gap-1.5"
+                  onClick={() => {
+                    const target = doctors.find((d) => d.id === editId);
+                    if (target) {
+                      setModalOpen(false);
+                      setDoctorToDelete(target);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Doctor from Site
+                </Button>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {editId ? "Save Changes" : "Create Doctor & Generate Login"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -771,28 +903,37 @@ export function DoctorsManagerClient({
             <>
               <DialogHeader>
                 <Badge variant="destructive" className="w-fit">
-                  Permanent Removal
+                  Permanent Removal from Site
                 </Badge>
-                <DialogTitle className="pt-1">
+                <DialogTitle className="pt-1 text-xl">
                   Delete {doctorToDelete.full_name}?
                 </DialogTitle>
-                <DialogDescription>
-                  This will remove the doctor&apos;s schedule, credentials, and profile from the platform. Patients will no longer be able to book appointments with this doctor.
+                <DialogDescription className="leading-relaxed">
+                  Are you sure you want to permanently delete <strong>{doctorToDelete.full_name}</strong> from <code>abhijithsaji.in</code>?
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs space-y-1.5">
-                <p className="font-semibold text-destructive">Caution:</p>
-                <p className="text-muted-foreground">
-                  If you only want to temporarily stop new bookings, you can use <strong>Deactivate</strong> instead of deleting.
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs space-y-2">
+                <p className="font-bold text-destructive flex items-center gap-1.5">
+                  <Trash2 className="h-4 w-4" />
+                  What happens when deleted:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                  <li>Doctor profile will be removed from the public website directory.</li>
+                  <li>All recurring schedules and slot availability will be cleared.</li>
+                  <li>Patients will no longer be able to book this doctor.</li>
+                </ul>
+                <p className="text-[11px] text-muted-foreground pt-1 border-t border-destructive/20">
+                  Tip: If you only want to take the doctor temporarily offline, you can use <strong>Deactivate</strong> instead.
                 </p>
               </div>
 
-              <DialogFooter className="gap-2 sm:gap-0">
+              <DialogFooter className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => setDoctorToDelete(null)}
                   disabled={deleting}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -800,9 +941,14 @@ export function DoctorsManagerClient({
                   variant="destructive"
                   onClick={handleDeleteDoctor}
                   disabled={deleting}
+                  className="w-full sm:w-auto font-semibold gap-1.5"
                 >
-                  {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Confirm Delete Doctor
+                  {deleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Confirm Delete from Site
                 </Button>
               </DialogFooter>
             </>
