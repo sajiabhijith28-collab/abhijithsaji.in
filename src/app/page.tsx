@@ -19,8 +19,8 @@ import {
   UserCheck,
   Wallet,
 } from "lucide-react";
-import { DoctorCard } from "@/components/doctors/doctor-card";
 import { HeroSearch } from "@/components/home/hero-search";
+import { HomeDoctorsGrid } from "@/components/home/home-doctors-grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -221,11 +221,7 @@ export default function LandingPage() {
         </div>
 
         {allDoctors.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {allDoctors.slice(0, 6).map((doc, idx) => (
-              <DoctorCard key={doc.id} doctor={doc} index={idx} />
-            ))}
-          </div>
+          <HomeDoctorsGrid doctors={allDoctors} />
         ) : (
           <Card className="border-dashed">
             <CardContent className="py-12 px-6 text-center space-y-3">
