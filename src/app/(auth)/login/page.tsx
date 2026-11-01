@@ -12,6 +12,7 @@ import {
   MessageSquareText,
   Phone,
   RotateCcw,
+  Shield,
   ShieldCheck,
   Stethoscope,
   UserCheck,
@@ -32,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OtpInput } from "@/components/ui/otp-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cleanIndianPhoneInput } from "@/lib/utils";
 import type { GenderType } from "@/types/database";
 
 function LoginFormContent() {
@@ -39,11 +41,16 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const { availableCities } = useLocationContext();
 
-  const initialTab =
-    searchParams.get("tab") === "doctor" ? "doctor" : "patient";
+  const tabParam = searchParams.get("tab");
+  const initialTab: "patient" | "doctor" | "admin" =
+    tabParam === "admin"
+      ? "admin"
+      : tabParam === "doctor"
+      ? "doctor"
+      : "patient";
   const nextPath = searchParams.get("next") || "";
 
-  const [roleTab, setRoleTab] = useState<"patient" | "doctor">(initialTab);
+  const [roleTab, setRoleTab] = useState<"patient" | "doctor" | "admin">(initialTab);
   const [patientMethod, setPatientMethod] = useState<"otp" | "password">("otp");
 
   const [phone, setPhone] = useState("");
@@ -66,10 +73,12 @@ function LoginFormContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    if (searchParams.get("tab") === "doctor") {
-      setRoleTab("doctor");
+    const tab = searchParams.get("tab");
+    if (tab === "admin" || tab === "doctor" || tab === "patient") {
+      setRoleTab(tab);
     }
   }, [searchParams]);
+
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -142,8 +151,17 @@ function LoginFormContent() {
         toast.success("Mobile number verified! Complete your personal profile.");
       } else {
         toast.success(`Welcome back, ${data.user.full_name}!`);
-        router.push(nextPath || "/account");
-        router.refresh();
+        let target = nextPath;
+        if (!target) {
+          if (data.user.role === "admin") {
+            target = "/admin";
+          } else if (data.user.role === "doctor") {
+            target = "/doctor/dashboard";
+          } else {
+            target = "/account";
+          }
+        }
+        window.location.href = target;
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Verification failed");
@@ -183,8 +201,7 @@ function LoginFormContent() {
       }
 
       toast.success("Personal healthcare account ready!");
-      router.push(nextPath || "/account");
-      router.refresh();
+      window.location.href = nextPath || "/account";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save profile");
     } finally {
@@ -194,7 +211,7 @@ function LoginFormContent() {
 
   const handlePasswordLogin = async (
     e: React.FormEvent,
-    expectedRole: "patient" | "doctor"
+    expectedRole: "patient" | "doctor" | "admin"
   ) => {
     e.preventDefault();
     setLoading(true);
@@ -208,12 +225,17 @@ function LoginFormContent() {
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       toast.success(`Signed in as ${data.user.full_name}`);
-      if (data.user.role === "doctor") {
-        router.push(nextPath || "/doctor/dashboard");
-      } else {
-        router.push(nextPath || "/account");
+      let target = nextPath;
+      if (!target) {
+        if (data.user.role === "admin") {
+          target = "/admin";
+        } else if (data.user.role === "doctor") {
+          target = "/doctor/dashboard";
+        } else {
+          target = "/account";
+        }
       }
-      router.refresh();
+      window.location.href = target;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
@@ -334,12 +356,16 @@ function LoginFormContent() {
             <BrandLogo size="xl" showText={false} />
           </div>
           <CardTitle className="text-2xl">
-            {roleTab === "doctor"
+            {roleTab === "admin"
+              ? "Administrator Console"
+              : roleTab === "doctor"
               ? "Doctor Portal Sign In"
               : "Personal Health Account"}
           </CardTitle>
           <CardDescription>
-            {roleTab === "doctor"
+            {roleTab === "admin"
+              ? "Sign in with platform administrator credentials to manage doctors and clinics"
+              : roleTab === "doctor"
               ? "Sign in with your registered doctor mobile number and password"
               : "Enter your mobile number to receive a 6-digit OTP and open your personal account"}
           </CardDescription>
@@ -349,19 +375,23 @@ function LoginFormContent() {
           <Tabs
             value={roleTab}
             onValueChange={(v) => {
-              setRoleTab(v as "patient" | "doctor");
+              setRoleTab(v as "patient" | "doctor" | "admin");
               setOtpSent(false);
               setOtp("");
             }}
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="patient" className="gap-1.5">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="patient" className="gap-1.5 text-xs sm:text-sm">
                 <UserCheck className="h-4 w-4" />
-                Personal Account
+                Personal
               </TabsTrigger>
-              <TabsTrigger value="doctor" className="gap-1.5">
+              <TabsTrigger value="doctor" className="gap-1.5 text-xs sm:text-sm">
                 <Stethoscope className="h-4 w-4" />
-                Doctor Portal
+                Doctor
+              </TabsTrigger>
+              <TabsTrigger value="admin" className="gap-1.5 text-xs sm:text-sm">
+                <Shield className="h-4 w-4" />
+                Admin
               </TabsTrigger>
             </TabsList>
 
@@ -408,12 +438,11 @@ function LoginFormContent() {
                           id="pat-phone"
                           type="tel"
                           inputMode="numeric"
-                          maxLength={10}
                           placeholder="Enter 10-digit mobile number"
                           className="rounded-l-none text-base font-medium tracking-wide"
                           value={phone}
                           onChange={(e) =>
-                            setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                            setPhone(cleanIndianPhoneInput(e.target.value))
                           }
                           required
                         />
@@ -428,7 +457,7 @@ function LoginFormContent() {
                       type="submit"
                       size="lg"
                       className="w-full"
-                      disabled={loading || phone.replace(/\D/g, "").length !== 10}
+                      disabled={loading || cleanIndianPhoneInput(phone).length !== 10}
                     >
                       {loading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -521,12 +550,11 @@ function LoginFormContent() {
                         id="pw-phone"
                         type="tel"
                         inputMode="numeric"
-                        maxLength={10}
                         placeholder="Enter 10-digit mobile number"
                         className="rounded-l-none"
                         value={phone}
                         onChange={(e) =>
-                          setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                          setPhone(cleanIndianPhoneInput(e.target.value))
                         }
                         required
                       />
@@ -547,7 +575,7 @@ function LoginFormContent() {
                     type="submit"
                     size="lg"
                     className="w-full"
-                    disabled={loading}
+                    disabled={loading || cleanIndianPhoneInput(phone).length !== 10}
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -573,15 +601,15 @@ function LoginFormContent() {
 
             {/* DOCTOR PORTAL LOGIN */}
             <TabsContent value="doctor" className="space-y-4 pt-3">
-                <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                  <p>
-                    Doctors sign in using the registered mobile number and password
-                    issued by the My Dr Hospital Administrator.
-                  </p>
-                  <p className="pt-1 text-[11px]">
-                    To join as a medical specialist, please contact the Platform Administrator directly.
-                  </p>
-                </div>
+              <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                <p>
+                  Doctors sign in using the registered mobile number and password
+                  issued by the My Dr Hospital Administrator.
+                </p>
+                <p className="pt-1 text-[11px]">
+                  To join as a medical specialist, please contact the Platform Administrator directly.
+                </p>
+              </div>
               <form
                 onSubmit={(e) => handlePasswordLogin(e, "doctor")}
                 className="space-y-4"
@@ -596,12 +624,11 @@ function LoginFormContent() {
                       id="doc-phone"
                       type="tel"
                       inputMode="numeric"
-                      maxLength={10}
                       placeholder="10-digit doctor mobile"
                       className="rounded-l-none"
                       value={phone}
                       onChange={(e) =>
-                        setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                        setPhone(cleanIndianPhoneInput(e.target.value))
                       }
                       required
                     />
@@ -622,7 +649,7 @@ function LoginFormContent() {
                   type="submit"
                   size="lg"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || cleanIndianPhoneInput(phone).length !== 10}
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -630,6 +657,65 @@ function LoginFormContent() {
                     <Stethoscope className="h-4 w-4" />
                   )}
                   Enter Doctor Portal
+                </Button>
+              </form>
+            </TabsContent>
+
+            {/* ADMIN CONSOLE LOGIN */}
+            <TabsContent value="admin" className="space-y-4 pt-3">
+              <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                <p>
+                  Platform administrators manage hospital listings, doctors,
+                  consultation fee settings, and clinic operations.
+                </p>
+              </div>
+              <form
+                onSubmit={(e) => handlePasswordLogin(e, "admin")}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="adm-phone-login">Admin Mobile Number</Label>
+                  <div className="flex">
+                    <span className="inline-flex items-center rounded-l-xl border border-r-0 bg-muted px-3.5 text-sm font-semibold text-foreground">
+                      +91
+                    </span>
+                    <Input
+                      id="adm-phone-login"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="10-digit admin mobile"
+                      className="rounded-l-none"
+                      value={phone}
+                      onChange={(e) =>
+                        setPhone(cleanIndianPhoneInput(e.target.value))
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adm-pw-login">Master Password</Label>
+                  <Input
+                    id="adm-pw-login"
+                    type="password"
+                    placeholder="Enter admin password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full"
+                  disabled={loading || cleanIndianPhoneInput(phone).length !== 10}
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Shield className="h-4 w-4" />
+                  )}
+                  Enter Admin Console
                 </Button>
               </form>
             </TabsContent>

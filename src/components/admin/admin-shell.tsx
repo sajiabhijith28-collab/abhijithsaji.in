@@ -35,7 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PublicProfile } from "@/types/database";
-import { cn } from "@/lib/utils";
+import { cleanIndianPhoneInput, cn } from "@/lib/utils";
 
 const ADMIN_NAV = [
   { href: "/admin", label: "Analytics Overview", icon: BarChart3 },
@@ -125,11 +125,13 @@ export function AdminShell({
                     <Input
                       id="adm-phone"
                       type="tel"
-                      maxLength={10}
+                      inputMode="numeric"
                       placeholder="10-digit mobile number"
                       className="rounded-l-none"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) =>
+                        setPhone(cleanIndianPhoneInput(e.target.value))
+                      }
                       required
                     />
                   </div>

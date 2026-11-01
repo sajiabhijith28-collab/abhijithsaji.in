@@ -19,6 +19,9 @@ export default async function DoctorPortalLayout({
     getDoctorByProfileId(user.id) ||
     (user.role === "admin" ? getDoctorById("doc-admin-saji") : null);
   if (!doctor) {
+    if (user.role === "admin") {
+      redirect("/admin");
+    }
     redirect("/login?tab=doctor");
   }
 

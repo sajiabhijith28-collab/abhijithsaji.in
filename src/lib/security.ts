@@ -30,8 +30,58 @@ export interface SessionPayload {
   userId: string;
   role: "patient" | "doctor" | "admin";
   phone: string;
+  fullName?: string;
+  city?: string;
   mustChangePassword?: boolean;
   exp: number;
+}
+
+/**
+ * Signs a compact stateless OTP verification challenge token.
+ */
+export function signOtpToken(payload: {
+  phone: string;
+  otp: string;
+  fullName?: string;
+}): string {
+  const fullPayload = {
+    phone: payload.phone,
+    otp: payload.otp,
+    fullName: payload.fullName,
+    exp: Math.floor(Date.now() / 1000) + 5 * 60, // 5 mins
+  };
+  const encoded = Buffer.from(JSON.stringify(fullPayload)).toString("base64url");
+  const sig = crypto
+    .createHmac("sha256", getSecret())
+    .update(encoded)
+    .digest("base64url");
+  return `${encoded}.${sig}`;
+}
+
+export function verifyOtpToken(token?: string): {
+  phone: string;
+  otp: string;
+  fullName?: string;
+} | null {
+  if (!token || !token.includes(".")) return null;
+  const [encoded, sig] = token.split(".");
+  if (!encoded || !sig) return null;
+  const expectedSig = crypto
+    .createHmac("sha256", getSecret())
+    .update(encoded)
+    .digest("base64url");
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expectedSig);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    const parsed = JSON.parse(
+      Buffer.from(encoded, "base64url").toString("utf8")
+    );
+    if (parsed.exp < Math.floor(Date.now() / 1000)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 /**

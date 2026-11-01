@@ -28,10 +28,29 @@ export function normalizeIndianPhone(raw: string): string {
   if (digits.length === 12 && digits.startsWith("91")) {
     return `+${digits}`;
   }
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return `+91${digits.slice(1)}`;
+  }
   if (raw.startsWith("+") && digits.length >= 10) {
     return `+${digits}`;
   }
   return `+91${digits.slice(-10)}`;
+}
+
+/**
+ * Strips non-digits and cleanly extracts the 10-digit mobile number,
+ * correctly handling pasted numbers with +91, 91, or leading 0 without truncating.
+ */
+export function cleanIndianPhoneInput(raw: string): string {
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return digits.slice(1);
+  }
+  return digits.slice(-10);
 }
 
 /**

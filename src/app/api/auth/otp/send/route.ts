@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createOtpChallenge, getProfileByPhone } from "@/lib/db/store";
+import { signOtpToken } from "@/lib/security";
 import { dispatchMobileOtp } from "@/lib/sms/provider";
 import { sendOtpSchema } from "@/lib/validations";
 
@@ -42,7 +43,13 @@ export async function POST(request: Request) {
       otp,
     });
 
-    return NextResponse.json({
+    const challengeToken = signOtpToken({
+      phone: normalizedPhone,
+      otp,
+      fullName: parsed.data.fullName,
+    });
+
+    const response = NextResponse.json({
       success: true,
       phone: normalizedPhone,
       maskedPhone: smsResult.maskedPhone,
@@ -52,6 +59,16 @@ export async function POST(request: Request) {
       resendAfterSeconds: 30,
       message: `6-digit verification code sent to ${smsResult.maskedPhone}`,
     });
+
+    response.cookies.set("mydr_otp_challenge", challengeToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 300,
+    });
+
+    return response;
   } catch (err) {
     return NextResponse.json(
       {
@@ -61,3 +78,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

@@ -213,7 +213,7 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
   return patched;
 }
 
-function loadDb(): LocalDatabaseSchema {
+export function loadDb(): LocalDatabaseSchema {
   if (
     global.__MYDR_MEM_DB__ &&
     global.__MYDR_MEM_DB__.store_version === CURRENT_STORE_VERSION
@@ -243,7 +243,7 @@ function loadDb(): LocalDatabaseSchema {
   return initial;
 }
 
-function persistDb(db: LocalDatabaseSchema): void {
+export function persistDb(db: LocalDatabaseSchema): void {
   global.__MYDR_MEM_DB__ = db;
   try {
     if (!fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR)) {
@@ -744,6 +744,57 @@ export function verifyOtpChallengeAndUpsertPatient(params: {
   persistDb(db);
   return { profile: existing, isNewUser, needsProfileSetup };
 }
+
+export function upsertVerifiedPatient(params: {
+  phone: string;
+  fullName?: string;
+  city?: string;
+}): {
+  profile: ProfileRecord;
+  isNewUser: boolean;
+  needsProfileSetup: boolean;
+} {
+  const db = loadDb();
+  const normalizedPhone = normalizeIndianPhone(params.phone);
+  let existing = db.profiles.find((p) => p.phone === normalizedPhone);
+  let isNewUser = false;
+
+  if (!existing) {
+    isNewUser = true;
+    const now = new Date().toISOString();
+    existing = {
+      id: `usr-pat-${crypto.randomUUID().slice(0, 8)}`,
+      role: "patient",
+      phone: normalizedPhone,
+      full_name:
+        params.fullName?.trim() || `Patient ${normalizedPhone.slice(-4)}`,
+      city: params.city || "Ponkunnam",
+      has_password: false,
+      must_change_password: false,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    };
+    db.profiles.push(existing);
+    persistDb(db);
+  } else if (!existing.is_active) {
+    throw new Error("This account has been deactivated. Contact support.");
+  } else if (params.fullName?.trim()) {
+    existing.full_name = params.fullName.trim();
+    if (params.city) existing.city = params.city;
+    existing.updated_at = new Date().toISOString();
+    persistDb(db);
+  }
+
+  const needsProfileSetup =
+    existing.role === "patient" &&
+    (isNewUser ||
+      !existing.age ||
+      existing.full_name.startsWith("Patient "));
+
+  return { profile: existing, isNewUser, needsProfileSetup };
+}
+
 
 export function verifyAndChangePatientPhone(params: {
   userId: string;

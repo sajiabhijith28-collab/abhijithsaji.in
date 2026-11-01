@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { setSessionCookie } from "@/lib/auth/session";
+import { SESSION_COOKIE_NAME, setSessionCookie } from "@/lib/auth/session";
 import { authenticateWithPassword, toPublicProfile } from "@/lib/db/store";
 import { passwordLoginSchema } from "@/lib/validations";
 
@@ -20,17 +20,29 @@ export async function POST(request: Request) {
       expectedRole: parsed.data.expectedRole,
     });
 
-    await setSessionCookie({
+    const token = await setSessionCookie({
       userId: profile.id,
       role: profile.role,
       phone: profile.phone,
+      fullName: profile.full_name,
+      city: profile.city,
       mustChangePassword: profile.must_change_password,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: toPublicProfile(profile),
     });
+
+    response.cookies.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (err) {
     return NextResponse.json(
       {
@@ -40,4 +52,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 
