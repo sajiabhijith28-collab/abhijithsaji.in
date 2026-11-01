@@ -12,6 +12,7 @@ export interface CityCoordinate {
 
 const SUPPORTED_CITY_COORDS: CityCoordinate[] = [
   { city: "Ponkunnam", latitude: 9.5662, longitude: 76.7628 },
+  { city: "Palai", latitude: 9.7126, longitude: 76.6835 },
 ];
 
 interface LocationContextValue {
@@ -102,7 +103,7 @@ export function LocationProvider({
           toast.success(`GPS verified near ${nearest.city}, Kerala`);
         } else {
           toast.info(
-            `My Dr exclusively serves Ponkunnam, Kerala — showing ${nearest.city} clinics.`
+            `Showing verified doctors & clinics in ${nearest.city}, Kerala.`
           );
         }
       },

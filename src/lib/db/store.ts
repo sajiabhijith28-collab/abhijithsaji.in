@@ -79,7 +79,7 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
     patched = true;
   }
 
-  // Ensure Ponkunnam clinics exist so doctors can always be onboarded smoothly
+  // Ensure clinics exist so doctors can always be onboarded smoothly
   if (!db.hospitals || db.hospitals.length === 0) {
     const nowIso = new Date().toISOString();
     db.hospitals = DEFAULT_PONKUNNAM_HOSPITALS.map((h) => ({
@@ -87,6 +87,100 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
       created_at: nowIso,
       updated_at: nowIso,
     }));
+    patched = true;
+  }
+
+  // Ensure Palai locations exist in database
+  const hasPalai = db.locations?.some((l) => l.city.toLowerCase() === "palai");
+  if (!hasPalai) {
+    if (!db.locations) db.locations = [];
+    const nowIso = new Date().toISOString();
+    db.locations.push(
+      {
+        id: "loc-palai-town",
+        city: "Palai",
+        area: "Palai Town",
+        state: "Kerala",
+        pincode: "686575",
+        latitude: 9.7126,
+        longitude: 76.6835,
+        is_active: true,
+        created_at: nowIso,
+      },
+      {
+        id: "loc-palai-bypass",
+        city: "Palai",
+        area: "Main Road (Pala Bypass)",
+        state: "Kerala",
+        pincode: "686575",
+        latitude: 9.7145,
+        longitude: 76.6872,
+        is_active: true,
+        created_at: nowIso,
+      },
+      {
+        id: "loc-palai-tb-junction",
+        city: "Palai",
+        area: "TB Junction / Hospital Road",
+        state: "Kerala",
+        pincode: "686575",
+        latitude: 9.7108,
+        longitude: 76.6811,
+        is_active: true,
+        created_at: nowIso,
+      },
+      {
+        id: "loc-palai-lalam",
+        city: "Palai",
+        area: "Lalam",
+        state: "Kerala",
+        pincode: "686575",
+        latitude: 9.7161,
+        longitude: 76.6849,
+        is_active: true,
+        created_at: nowIso,
+      }
+    );
+    patched = true;
+  }
+
+  // Ensure Palai clinics exist in database
+  const hasPalaiHosp = db.hospitals?.some((h) =>
+    h.location_id?.startsWith("loc-palai")
+  );
+  if (!hasPalaiHosp) {
+    if (!db.hospitals) db.hospitals = [];
+    const nowIso = new Date().toISOString();
+    db.hospitals.push(
+      {
+        id: "hosp-palai-main",
+        name: "Palai Specialty Hospital & Medical Centre",
+        slug: "palai-specialty-hospital",
+        location_id: "loc-palai-town",
+        address: "Hospital Road, Palai, Kerala 686575",
+        phone: "+914822212000",
+        email: "care@palaimedical.in",
+        rating: 4.8,
+        is_verified: true,
+        is_active: true,
+        created_at: nowIso,
+        updated_at: nowIso,
+      },
+      {
+        id: "hosp-palai-care",
+        name: "Palai Medicare & Specialist Clinic",
+        slug: "palai-medicare-clinic",
+        location_id: "loc-palai-bypass",
+        address: "Main Road (Pala Bypass), Palai, Kerala 686575",
+        phone: "+914822213000",
+        email: "info@palaimedicare.in",
+        rating: 4.7,
+        is_verified: true,
+        is_active: true,
+        created_at: nowIso,
+        updated_at: nowIso,
+      }
+    );
     patched = true;
   }
 

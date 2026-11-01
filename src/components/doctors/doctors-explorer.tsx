@@ -367,13 +367,13 @@ export function DoctorsExplorer({
             <Badge variant="secondary" className="gap-1">
               <MapPin className="h-3 w-3" />
               {selectedCity === "All Cities"
-                ? "Ponkunnam, Kerala"
+                ? "Ponkunnam & Palai, Kerala"
                 : `${selectedCity}, Kerala`}
             </Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">
             {selectedCity === "All Cities"
-              ? "Doctors & Specialists in Ponkunnam, Kerala"
+              ? "Doctors & Specialists in Ponkunnam & Palai"
               : `Top Doctors in ${selectedCity}, Kerala`}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">

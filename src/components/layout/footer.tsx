@@ -28,9 +28,9 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-slate-300/85 leading-relaxed">
-              Ponkunnam, Kerala&apos;s dedicated hospital &amp; specialist
+              Ponkunnam &amp; Palai, Kerala&apos;s dedicated hospital &amp; specialist
               appointment booking platform. Instant confirmed slots, transparent
-              fees, and verified medical practitioners in Ponkunnam.
+              fees, and verified medical practitioners in Ponkunnam and Palai.
             </p>
             <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-200 pt-1">
               <span className="inline-flex items-center gap-1 rounded-full border border-[#c9a353]/35 bg-white/[0.06] px-2.5 py-1">

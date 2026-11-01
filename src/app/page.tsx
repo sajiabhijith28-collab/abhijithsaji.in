@@ -72,25 +72,24 @@ export default function LandingPage() {
             <div className="lg:col-span-8 space-y-5">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c9a353]/50 bg-[#c9a353]/15 px-3.5 py-1 text-xs font-medium text-[#ebd396]">
                 <ShieldCheck className="h-3.5 w-3.5 text-[#dfc074]" />
-                Ponkunnam, Kerala • Verified Hospital &amp; Specialist Network
+                Ponkunnam &amp; Palai, Kerala • Verified Hospital &amp; Specialist Network
               </span>
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl leading-[1.1] text-white">
-                Find Trusted Doctors in Ponkunnam.{" "}
+                Find Trusted Doctors in Ponkunnam &amp; Palai.{" "}
                 <span className="bg-gradient-to-r from-[#ebd396] via-[#dfc074] to-[#c9a353] bg-clip-text text-transparent">
                   Book Confirmed Slots
                 </span>{" "}
                 in 60 Seconds.
               </h1>
               <p className="text-base sm:text-lg text-slate-200/90 max-w-2xl leading-relaxed">
-                Skip hospital queues in Ponkunnam, Kerala. Browse verified
+                Skip hospital queues in Ponkunnam and Palai, Kerala. Browse verified
                 specialists
                 {hospitals.length > 0
                   ? ` across ${hospitals.length} partner hospital${
                       hospitals.length > 1 ? "s" : ""
-                    } in Ponkunnam`
-                  : " across Ponkunnam clinics"}
-                , lock your slot with a direct UPI booking fee, and pay your
-                consultation fee directly at the clinic.
+                    } in Ponkunnam and Palai`
+                  : " across verified clinics"}
+                , confirm your visit in 1 click, and pay your consultation and booking fee directly to the doctor at the clinic.
               </p>
             </div>
 
