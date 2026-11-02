@@ -48,6 +48,11 @@ import {
   DEFAULT_PONKUNNAM_HOSPITALS,
   type LocalDatabaseSchema,
 } from "./seed-data";
+import {
+  remoteEnabled,
+  remoteFetchSnapshot,
+  remotePushSnapshot,
+} from "./remote-sync";
 
 // Persist runtime store in MYDR_DATA_DIR (for Railway/VPS persistent volumes) or OS temp dir outside Next.js watcher root
 const DATA_DIR =
@@ -57,6 +62,49 @@ const DB_FILE = path.join(DATA_DIR, "mydr-store.json");
 declare global {
   // eslint-disable-next-line no-var
   var __MYDR_MEM_DB__: LocalDatabaseSchema | undefined;
+  // eslint-disable-next-line no-var
+  var __MYDR_REMOTE_REV__: string | undefined;
+  // eslint-disable-next-line no-var
+  var __MYDR_REMOTE_CHECKED__: number | undefined;
+}
+
+/**
+ * Pulls the latest durable snapshot (Supabase `app_state`) into this server
+ * instance so every serverless instance sees the same doctors and bookings.
+ * No-op unless Supabase service credentials are configured.
+ */
+function syncFromRemote(): void {
+  if (!remoteEnabled()) return;
+  const now = Date.now();
+  if (
+    global.__MYDR_REMOTE_CHECKED__ &&
+    now - global.__MYDR_REMOTE_CHECKED__ < 2000
+  ) {
+    return;
+  }
+  global.__MYDR_REMOTE_CHECKED__ = now;
+
+  const snap = remoteFetchSnapshot();
+  if (snap === "error") return;
+
+  if (snap && snap.data && snap.data.store_version === CURRENT_STORE_VERSION) {
+    if (snap.rev !== global.__MYDR_REMOTE_REV__) {
+      global.__MYDR_MEM_DB__ = snap.data;
+      global.__MYDR_REMOTE_REV__ = snap.rev;
+    }
+    return;
+  }
+
+  // Nothing stored remotely yet (or an older store version): publish the
+  // current state so all instances share it from now on.
+  const seed =
+    global.__MYDR_MEM_DB__ &&
+    global.__MYDR_MEM_DB__.store_version === CURRENT_STORE_VERSION
+      ? global.__MYDR_MEM_DB__
+      : buildInitialSeedDatabase();
+  global.__MYDR_MEM_DB__ = seed;
+  const rev = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  if (remotePushSnapshot(seed, rev)) global.__MYDR_REMOTE_REV__ = rev;
 }
 
 function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
@@ -214,6 +262,7 @@ function ensureSettingsDefaults(db: LocalDatabaseSchema): boolean {
 }
 
 export function loadDb(): LocalDatabaseSchema {
+  syncFromRemote();
   if (
     global.__MYDR_MEM_DB__ &&
     global.__MYDR_MEM_DB__.store_version === CURRENT_STORE_VERSION
@@ -252,6 +301,13 @@ export function persistDb(db: LocalDatabaseSchema): void {
     fs.writeFileSync(/*turbopackIgnore: true*/ DB_FILE, JSON.stringify(db, null, 2), "utf8");
   } catch {
     // Read-only serverless filesystem (Vercel) — in-memory cache remains active
+  }
+
+  // Durable mirror so doctors/bookings survive across serverless instances
+  if (remoteEnabled()) {
+    const rev = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    if (remotePushSnapshot(db, rev)) global.__MYDR_REMOTE_REV__ = rev;
+    global.__MYDR_REMOTE_CHECKED__ = Date.now();
   }
 }
 
