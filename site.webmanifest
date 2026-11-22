@@ -1,0 +1,16 @@
+{
+  "name": "Abhijith Saji — Full-Stack Web & Native Android Developer",
+  "short_name": "Abhijith Saji",
+  "description": "Interactive 3D Resume & Portfolio of Abhijith Saji, Full-Stack Web & Native Android Application Developer from Kerala, India.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0605",
+  "theme_color": "#ff5e1a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
