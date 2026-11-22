@@ -91,7 +91,8 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            <span>PDF Resume</span>
+            <span class="btn-pdf-full">PDF Resume</span>
+            <span class="btn-pdf-short" aria-hidden="true">PDF</span>
           </button>
         </div>
       </div>
@@ -424,6 +425,46 @@
       </div>
     </footer>
   </div>
+
+  <!-- Mobile Floating Bottom Navigation Dock (<= 1024px) -->
+  <nav class="mobile-dock" id="mobile-dock" aria-label="Mobile navigation">
+    <a href="#overview" class="dock-item active" data-section="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="#experience" class="dock-item" data-section="experience">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="7" width="20" height="14" rx="2"/>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+      </svg>
+      <span>Work</span>
+    </a>
+    <a href="#cases" class="dock-item" data-section="cases">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+        <polyline points="2 17 12 22 22 17"/>
+        <polyline points="2 12 12 17 22 12"/>
+      </svg>
+      <span>Builds</span>
+    </a>
+    <a href="#skills" class="dock-item" data-section="skills">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="16 18 22 12 16 6"/>
+        <polyline points="8 6 2 12 8 18"/>
+      </svg>
+      <span>Skills</span>
+    </a>
+    <a href="#credentials" class="dock-item" data-section="credentials">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+      </svg>
+      <span>Edu</span>
+    </a>
+  </nav>
 
   <!-- ====================================================================== -->
   <!-- Project Deep-Dive Modal                                                -->

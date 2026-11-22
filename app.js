@@ -827,7 +827,7 @@
       card.dataset.spotlightBound = "1";
 
       card.addEventListener("pointermove", (e) => {
-        if (document.body.classList.contains("cv-mode")) return;
+        if (e.pointerType === "touch" || document.body.classList.contains("cv-mode")) return;
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -916,6 +916,7 @@
     const progressEl = document.getElementById("scroll-progress");
     const depthEl = document.getElementById("depth-readout");
     const navLinks = Array.from(document.querySelectorAll("#nav-links .nav-link"));
+    const dockLinks = Array.from(document.querySelectorAll("#mobile-dock .dock-item"));
     const sectionIds = navLinks.map((l) => l.dataset.section);
 
     function onScroll() {
@@ -935,6 +936,7 @@
         if (sec && sec.offsetTop <= offset) current = id;
       });
       navLinks.forEach((l) => l.classList.toggle("active", l.dataset.section === current));
+      dockLinks.forEach((l) => l.classList.toggle("active", l.dataset.section === current));
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });

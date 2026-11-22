@@ -79,8 +79,9 @@
   function createNebulaScene(canvas) {
     if (!canvas) return null;
 
-    const PARTICLE_COUNT = 175;
-    const NEBULA_CLOUDS = 5;
+    const isMobile = window.innerWidth < 768;
+    const PARTICLE_COUNT = isMobile ? 82 : 175;
+    const NEBULA_CLOUDS = isMobile ? 3 : 5;
     const particles = [];
     const clouds = [];
 
@@ -98,7 +99,7 @@
         size: 1.0 + Math.random() * 2.5,
         tint: tint,
         phase: Math.random() * Math.PI * 2,
-        connectable: i < 56
+        connectable: i < (isMobile ? 28 : 56)
       });
     }
 
@@ -372,7 +373,9 @@
       dragActive = true;
       lastX = e.clientX;
       lastY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
+      if (e.pointerType === "mouse") {
+        canvas.setPointerCapture(e.pointerId);
+      }
     });
 
     canvas.addEventListener("pointermove", (e) => {
@@ -746,7 +749,9 @@
       drag = true;
       lx = e.clientX;
       ly = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
+      if (e.pointerType === "mouse") {
+        canvas.setPointerCapture(e.pointerId);
+      }
     });
 
     canvas.addEventListener("pointermove", (e) => {
